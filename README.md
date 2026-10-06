@@ -6,7 +6,7 @@ A concept site for a fictional Caribbean niche fragrance house, built by **Ports
 
 ## Open the site
 
-The whole site is one file, `index.html`. All libraries load from CDNs, so you can double-click it to open it. For the best result (and the ad recorder), serve it locally:
+The whole site is one file, `index.html`, plus `assets/`. All libraries load from CDNs. Serve it locally (double-clicking works too, but browsers block the HDRI on `file://`, so the glass falls back to a simpler procedural studio):
 
 ```bash
 node scripts/serve.mjs
@@ -16,8 +16,8 @@ Then open http://localhost:5173.
 
 What's inside:
 - **Preloader → hero reveal**: a 000→100 counter, then a circular mask opens out of the bottle while the MAREA letters rise through masks. The bottle surfaces with a settling spin and the pearl swarm bursts outward.
-- **WebGL centrepiece** (Three.js, all custom shaders): a glass flacon with a fresnel/thin-film glass shader, and liquid that sloshes with a damped spring driven by the bottle's spin and tilt. It has bioluminescent sparks, an engraved label and a pearl stopper. It tilts toward the cursor on a spring.
-- **Physics swarm**: pearls and sea-glass shards orbit the bottle, get pushed away by the cursor (harder when you move fast) and spring back. 4,000+ plankton particles drift upward and part around the pointer.
+- **Realistic bottle, rendered live** (Three.js, physically based): thick glass with real refraction, dispersion and clearcoat. It's lit by a studio HDRI and bends both the background and the giant MAREA title behind it. The liquid is see-through and tinted, refracts what's behind it, and sloshes on a damped spring driven by the bottle's spin and tilt. It has a champagne-metal collar, a nacre pearl stopper (iridescence + sheen) and a screen-printed label. The bottle tilts toward the cursor on a spring.
+- **Physics swarm**: real-material pearls and frosted sea-glass shards orbit the bottle, get pushed away by the cursor (harder when you move fast) and spring back. 4,000+ plankton particles drift upward and part around the pointer.
 - **Background shader**: deep-water gradient, caustics, god rays, cursor ripples, and a liquid colour flood that spreads from wherever you click.
 - **Scent switch** (N°01 / N°02 / N°03): colour flood, 720° spin with real motion blur (driven by spin velocity), and the swarm implodes into the bottle then explodes back out. The liquid and label swap at the peak of the spin.
 - **Scroll story** (GSAP ScrollTrigger + Lenis): a pinned manifesto with words lighting up on scroll; pinned notes where the bottle turns a full revolution; a horizontal collection with 3D-tilt cards; a zoom-through the word DEEP; parallax stats and marquees; a depth meter that counts down to 1,200 m.
@@ -65,6 +65,7 @@ The recorder renders each frame `i` at exactly `t = i / 30` (fixed-step physics,
 
 - Libraries: [Three.js](https://threejs.org) r170, [GSAP](https://gsap.com) 3.13 (ScrollTrigger, SplitText, CustomEase), [Lenis](https://lenis.darkroom.engineering).
 - Fonts: Bodoni Moda, Inter Tight and JetBrains Mono (Google Fonts, SIL OFL).
-- Every 3D object, texture and effect is procedural; there are no stock images or models.
+- Studio lighting: [studio_small_09](https://polyhaven.com/a/studio_small_09) HDRI by Poly Haven (CC0), in `assets/studio.hdr`.
+- The bottle, pearls, sea glass, label and every effect are modelled in code; there are no stock images or 3D models.
 - Ad soundtrack: the audio of the reference Instagram reel above. It belongs to its rights holders and is used here only for the ad. Check the licence before running it as a paid ad.
 - Design and build: Portside Digital.
