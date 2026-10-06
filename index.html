@@ -262,6 +262,13 @@ body.ad #ad{display:block}
 #glowB{z-index:5;background:radial-gradient(75% 42% at 50% 104%,rgba(127,243,255,.6),transparent 72%);mix-blend-mode:screen}
 #flash{z-index:13;background:#fff}
 #thumbL{z-index:3;background:#000}
+#r5{z-index:4;background:#111;overflow:hidden}
+#r5bg{position:absolute;inset:-60px;width:1200px;height:2040px;object-fit:cover;filter:blur(38px) brightness(.62) saturate(1.1)}
+#r5safari{position:absolute;inset:0;width:1080px;height:1920px;clip-path:inset(36px 166px 178px 166px round 70px);z-index:3}
+#r5card{position:absolute;left:172px;top:135px;width:738px;height:1602px;border-radius:74px;overflow:hidden;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.45);z-index:2}
+#r5card img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+#r5lbl{position:absolute;left:258px;top:48px;display:flex;align-items:center;gap:22px;z-index:2;font:600 44px/1 -apple-system,'SF Pro Display','Inter Tight',sans-serif;color:#fff}
+#r5lbl i{width:70px;height:70px;border-radius:16px;background:radial-gradient(circle at 35% 30%,#fff 0 7%,#7ff3ff 30%,#6a3dff 64%,#05040c 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 .th-txt{position:absolute;left:70px;top:150px;display:flex;flex-direction:column;align-items:flex-start;color:#fff;line-height:.9}
 .th-txt span{font:800 58px/1 Rubik,sans-serif;letter-spacing:.01em}
 .th-txt b{font:900 132px/1 Rubik,sans-serif;letter-spacing:.01em;margin:6px 0 6px 44px}
@@ -1711,6 +1718,8 @@ function initAd() {
         <g id="th-bl" style="display:none;filter:url(#sblur)" opacity=".8"><path d="M960 1920 C 900 1720 820 1560 720 1420 C 640 1310 560 1250 530 1190 C 506 1140 540 1090 600 1110 C 660 1130 700 1220 760 1290 C 860 1400 960 1500 1080 1560" stroke-dasharray="40 18"/></g>
       </svg>
     </div>
+    <div class="ad-layer" id="r5"><img id="r5bg" alt=""><img id="r5safari" alt="">
+      <div id="r5lbl"><i></i><span>MAREA</span></div><div id="r5card"><img alt=""></div></div>
     <div class="ad-layer sw" id="swA"><img alt=""></div>
     <div class="ad-layer sw" id="swB"><img alt=""></div>
     <div class="ad-layer" id="mbar"><div class="pill"><span class="aa">AA</span><span class="lock">🔒</span><span class="u"></span><span class="rl">↻</span></div></div>
@@ -1763,7 +1772,7 @@ function initAd() {
   }
   // every ad layer starts hidden; each builder shows what it uses
   gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep', '#adHole',
-            '#tpl', '#adBlack', '#sk', '#adWords', '#adBadge', '#glowB', '#descent', '#flash', '#devBg', '#chip', '#dPhone', '#dDesk', '#grid', '#wall', '#descent2', '#thumbL', '#swA', '#swB', '#mbar'], { autoAlpha: 0 });
+            '#tpl', '#adBlack', '#sk', '#adWords', '#adBadge', '#glowB', '#descent', '#flash', '#devBg', '#chip', '#dPhone', '#dDesk', '#grid', '#wall', '#descent2', '#thumbL', '#swA', '#swB', '#mbar', '#r5'], { autoAlpha: 0 });
   { const src = ($('script[type=module]').textContent || '').split('\n').filter(l => l.trim()); $$('#descent2 pre').forEach((p, i) => { p.textContent = src.slice(i * 140, i * 140 + 140).join('\n'); }); }
   gsap.set(['#pdMark', '#pdWord', '#pdTag', '#pdBy', '#pdCta'], { opacity: 0 });
 
@@ -1908,7 +1917,7 @@ function initAd() {
   const clips = [], stills = [];
   const clip = (name, site, dev, frames, spec = {}) => { clips.push({ name, url: siteURL(site, spec.q || (site === 'marea' && dev === PHONE ? '?dpr=2' : '')), ...dev, frames, preroll: 3, ...spec, q: undefined }); return name; };
   const still = (site, dev) => { const name = `still-${site}-${dev === PHONE ? 'p' : 'd'}`; if (!stills.find(s => s.name === name)) stills.push({ name, url: siteURL(site, site === 'marea' && dev === PHONE ? '?dpr=2' : ''), ...dev, frames: 1, preroll: site === 'marea' ? 7.8 : site === 'soda' ? 4.5 : 3.2, cursor: null }); return name; };
-  const shotState = { phone: null, desk: null, swA: null, swB: null };
+  const shotState = { phone: null, desk: null, swA: null, swB: null, card: null };
   // put a clip on a device from frame `at` on; `off` skips into the clip
   function onDevice(dev, name, at, site, chip, feature, opts = {}) {
     tl.call(() => {
@@ -1930,10 +1939,10 @@ function initAd() {
   // frame-exact image swapping for device screens
   async function paintDevices(i) {
     const jobs = [];
-    for (const dev of ['phone', 'desk', 'swA', 'swB']) {
-      const st = shotState[dev], img = $({ phone: '#dPhone img', desk: '#dDesk img', swA: '#swA img', swB: '#swB img' }[dev]);
+    for (const dev of ['phone', 'desk', 'swA', 'swB', 'card']) {
+      const st = shotState[dev], img = $({ phone: '#dPhone img', desk: '#dDesk img', swA: '#swA img', swB: '#swB img', card: '#r5card img' }[dev]);
       if (!st) continue;
-      const c = clips.find(c => c.name === st.name);
+      const c = clips.find(c => c.name === st.name) || stills.find(c => c.name === st.name);
       const k = Math.max(0, Math.min(c.frames - 1, i - st.f0 + st.off));
       const src = `/ad/frames/ad${AD_N}/clips/${st.name}/f_${String(k).padStart(4, '0')}.jpg`;
       if (img.getAttribute('src') !== src) { img.setAttribute('src', src); jobs.push(img.decode().catch(() => {})); }
@@ -2185,7 +2194,127 @@ function initAd() {
     return { T, M, SLOTS };
   }
 
-  const { T, M, SLOTS } = [null, buildAd1, buildAd2, buildAd3, buildAd4][AD_N]();
+
+  /* ───────────────────────── ad 5 · "close the app, open the site" (reference reel 5) ───────────────────────── */
+  function buildAd5() {
+    // the reference's audio plays as-is: the Reel's own sound, the silent app switcher, then the song from 10.0 s
+    const M = { file: 'reference/reel5/reel.mp4', src: 37.383 };
+    M.segs = [[0, M.src]];
+    const T = { cardIn: snap(8.967), cardLabel: snap(9.1), open: snap(9.9), opened: snap(10.15), end: snap(34.3), tag: snap(34.644), cta: snap(35.167), len: Math.round(M.src * 30) / 30 };
+    const FULL = { vp: [432, 768], dpr: 2.5, mobile: true, cursor: 'touch' };
+    const SLOTS = [{ name: 'reel5-intro', from: 0, to: T.cardIn, video: M.file, srcFrom: 0 }];
+    stills.push({ name: 'r5-safari', video: M.file, at: 8.933, frames: 1 }, { name: 'r5-bg', video: M.file, at: 9.5, frames: 1 });
+    const fstill = site => { const name = `stillf-${site}`; if (!stills.find(s => s.name === name)) stills.push({ name, url: siteURL(site, site === 'marea' ? '?dpr=2.5' : ''), ...FULL, cursor: null, frames: 1, preroll: site === 'marea' ? 7.8 : site === 'soda' ? 4.5 : 3.2 }); return name; };
+
+    // the main section: cut points are the reference's own visual cuts
+    const C = [10.15, 11.633, 12.933, 13.633, 14.2, 15.567, 16.467, 17.133, 17.833, 18.5, 19.567, 20.567, 21.4, 22.1, 22.767, 23.433, 24.167, 24.867, 27.69, 29.767, 30.433, 31.5, 32.38, 33.267, 34.3].map(snap);
+    const F = (a, b) => Math.round((C[b] - C[a]) * 30) + 3;
+    const marQ = '?dpr=2.5';
+    clip('a5-marea-open', 'marea', FULL, Math.round((C[1] - T.cardIn) * 30) + 3, { q: marQ, preroll: 7.9, actions: [{ mouse: [[0, 216, 900], [40, 216, 900]] }] });
+    clip('a5-marea-scroll', 'marea', FULL, F(1, 2), { q: marQ, preroll: 8.4, lenis: true, cursor: null, actions: [{ scroll: [[0, 0], [36, "__top('#manifesto') + innerHeight * .6"]] }] });
+    clip('a5-soda-hero', 'soda', FULL, F(2, 3), { preroll: 4.6, cursor: null });
+    clip('a5-soda-switch', 'soda', FULL, F(3, 4), { preroll: 4.7, cursor: null, actions: [{ js: [0, 'window.__soda.setFlavor(1)'] }] });
+    clip('a5-marea-desk', 'marea', DESK, F(4, 5), { preroll: 7.2, cursor: null, actions: [
+      { mouse: [[0, 520, 640], [12, 900, 360], [18, 780, 470], [22, "__c('.scent-btn',2)"], [41, "__c('.scent-btn',2)"]] }, { click: 23 }] });
+    clip('a5-tamarind-menu', 'tamarind', FULL, F(5, 6), { cursor: null, actions: [{ scroll: [[0, 0], [26, "__top('#menu') + 300"]] }] });
+    clip('a5-tamarind-res', 'tamarind', FULL, F(6, 7), { prescroll: "__top('.reserve .form') - 70", actions: [
+      { mouse: [[0, 300, 500], [3, "__c('[data-step=\"1\"]')"], [22, "__c('[data-step=\"1\"]')"]] }, { click: 4 }, { click: 10 }, { click: 16 }] });
+    clip('a5-gloss-ba', 'gloss', FULL, F(7, 8), { cursor: null, prescroll: "__top('.ba') + 4", actions: [{ scroll: [[0, "__top('.ba') + 4"], [20, "__top('.ba') + innerHeight * 1.15"]] }] });
+    clip('a5-gloss-quote', 'gloss', FULL, F(8, 9), { prescroll: "__top('.quote') - 40", actions: [
+      { mouse: [[0, 200, 500], [3, "__lc('input[name=pkg]',1)"], [8, "__lc('input[name=pkg]',1)"], [11, "__lc('input[name=add]',0)"], [22, "__lc('input[name=add]',0)"]] }, { click: 4 }, { click: 12 }] });
+    clip('a5-leeward-cal', 'leeward', FULL, F(9, 10), { prescroll: "__top('.cal') - 90", actions: [
+      { mouse: [[0, 216, 600], [3, "__c('.grid .day:not([disabled])', 4)"], [10, "__c('.grid .day:not([disabled])', 4)"], [13, "__c('.grid .day.edge ~ .day:not([disabled])', 1)"], [20, "__c('.grid .day.edge ~ .day:not([disabled])', 1)"], [34, 216, 640]] },
+      { click: 4 }, { click: 14 }, { scroll: [[16, "__top('.cal') - 90"], [28, "__top('.cal') + 230"]] }] });
+    clip('a5-leeward-desk', 'leeward', DESK, F(10, 11), { cursor: null, actions: [{ scroll: [[0, 0], [30, 260]] }] });
+    clip('a5-pulse-hero', 'pulse', FULL, F(11, 12), { cursor: null, actions: [{ scroll: [[0, 0], [24, 120]] }] });
+    clip('a5-pulse-tabs', 'pulse', DESK, F(12, 13), { prescroll: "__top('.days') - 330", actions: [
+      { mouse: [[0, "__c('.days button',0)"], [5, "__c('.days button',2)"], [11, "__c('.days button',4)"], [21, "__c('.days button',4)"]] }, { click: 6 }, { click: 12 }] });
+    clip('a5-pulse-form', 'pulse', FULL, F(13, 14), { prescroll: "__top('#free-week .form') - 60", actions: [
+      { mouse: [[0, 200, 420], [2, "__c('input[name=name]')"], [20, "__c('input[name=name]')"]] }, { click: 3 }, { type: [4, 16, 'input[name=name]', 'Marcus'] }] });
+    clip('a5-gilded-hero', 'gilded', FULL, F(14, 15), { cursor: null });
+    clip('a5-gilded-strips', 'gilded', DESK, F(15, 16), { prescroll: "__top('.strips') - 140", actions: [
+      { mouse: [[0, "__c('.strip',0)"], [7, "__c('.strip',1)"], [14, "__c('.strip',3)"], [22, "__c('.strip',4)"]] }] });
+    clip('a5-marea-tap', 'marea', FULL, F(19, 20), { q: marQ, preroll: 8.2, actions: [{ mouse: [[0, 300, 560], [3, "__c('.scent-btn',2)"], [20, "__c('.scent-btn',2)"]] }, { click: 4 }] });
+    clip('a5-marea-desk-scroll', 'marea', DESK, F(20, 21), { preroll: 7.2, lenis: true, cursor: null, actions: [{ mouse: [[0, 980, 420], [32, 760, 520]] }, { scroll: [[0, 0], [30, "__top('#manifesto') + innerHeight * .55"]] }] });
+    clip('a5-soda-desk', 'soda', DESK, F(21, 22), { preroll: 4.4, actions: [{ mouse: [[0, 900, 520], [4, "__c('.card',1)"], [27, "__c('.card',1)"]] }, { js: [5, 'window.__soda.setFlavor(1)'] }] });
+    clip('a5-tamarind-desk', 'tamarind', DESK, F(22, 23), { cursor: null, prescroll: "__top('#menu')", actions: [{ scroll: [[0, "__top('#menu')"], [26, "__top('#menu') + 1300"]] }] });
+
+    applyScentInstant(0);
+    gsap.set(['#adHole'], { autoAlpha: 1 });
+    SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
+
+    // ── the app switcher: Safari is flicked away, our site's card waits underneath ──
+    $('#r5bg').dataset.still = 'r5-bg'; $('#r5safari').dataset.still = 'r5-safari';
+    shotState.card = { name: 'a5-marea-open', f0: Math.round(T.opened * 30) - 1, off: 0 };
+    show('#r5', true, T.cardIn);
+    tl.set('#r5card', { left: 172, top: 135, width: 738, height: 1602, borderRadius: 74 }, T.cardIn);
+    tl.set('#r5lbl', { opacity: 0 }, T.cardIn);
+    tl.fromTo('#r5safari', { x: 0, y: 0, scale: 1 }, { x: 330, y: -1650, scale: .94, duration: .15, ease: 'power2.in', immediateRender: false }, T.cardIn);
+    tl.set('#r5safari', { autoAlpha: 0 }, T.cardIn + .17);
+    tl.to('#r5lbl', { opacity: 1, duration: .12 }, T.cardLabel);
+    // tap: the card opens to full screen
+    tl.to('#r5card', { left: 0, top: 0, width: 1080, height: 1920, borderRadius: 0, duration: T.opened - T.open, ease: 'power2.inOut' }, T.open);
+    tl.to('#r5lbl', { opacity: 0, y: -40, duration: .12 }, T.open);
+    tl.to('#r5bg', { opacity: 0, duration: T.opened - T.open }, T.open);
+    show('#mbar', true, T.opened);
+    tl.call(() => { $('#mbar .u').textContent = SITES.marea.url; }, null, T.opened);
+
+    // ── main section ──
+    const full = (i, name, site) => {
+      tl.call(() => { shotState.swA = { name, f0: Math.round(C[i] * 30), off: 0 }; $('#mbar .u').textContent = SITES[site].url; $('#ftag').style.display = 'none'; }, null, C[i]);
+      show(['#swA', '#mbar'], true, C[i]); show(['#devBg', '#chip', '#dPhone', '#dDesk', '#r5', '#grid', '#wall'], false, C[i]);
+      tl.set('#swA', { x: 0, scale: 1 }, C[i]);
+      tl.to('#swA', { scale: 1.04, duration: C[i + 1] - C[i], ease: 'none' }, C[i]);
+    };
+    const tag = (i, text) => { tl.call(() => { $('#ftag').textContent = text; $('#ftag').style.display = ''; }, null, C[i]); tl.fromTo('#ftag', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: .2, ease: 'silk', immediateRender: false }, C[i]); };
+    const desk = (i, name, site, feature, o = {}) => { show(['#swA', '#mbar', '#r5', '#grid', '#wall'], false, C[i]); tl.call(() => { $('#ftag').style.display = 'none'; }, null, C[i]); onDevice('desk', name, C[i], site, '', feature, { ry: o.ry ?? -8, rx: 3, drift: { rotateY: (o.ry ?? -8) + 4 }, dur: C[i + 1] - C[i] }); };
+    show('#r5', false, C[1]);
+    full(1, 'a5-marea-scroll', 'marea'); tag(1, 'Scroll-driven story');
+    full(2, 'a5-soda-hero', 'soda');
+    full(3, 'a5-soda-switch', 'soda'); tag(3, 'Product configurator');
+    desk(4, 'a5-marea-desk', 'marea', 'Cursor-reactive 3D');
+    full(5, 'a5-tamarind-menu', 'tamarind');
+    full(6, 'a5-tamarind-res', 'tamarind'); tag(6, 'Reservations, no app');
+    full(7, 'a5-gloss-ba', 'gloss'); tag(7, 'Before / after reveal');
+    full(8, 'a5-gloss-quote', 'gloss'); tag(8, 'Instant quote builder');
+    full(9, 'a5-leeward-cal', 'leeward'); tag(9, 'Live booking calendar');
+    desk(10, 'a5-leeward-desk', 'leeward', 'Villa rental', { ry: 8 });
+    full(11, 'a5-pulse-hero', 'pulse');
+    desk(12, 'a5-pulse-tabs', 'pulse', 'Class timetable');
+    full(13, 'a5-pulse-form', 'pulse'); tag(13, 'Lead form, validated');
+    full(14, 'a5-gilded-hero', 'gilded');
+    desk(15, 'a5-gilded-strips', 'gilded', 'Hover gallery', { ry: 8 });
+    // every site on a phone
+    show(['#devBg', '#chip', '#dDesk', '#dPhone', '#swA', '#mbar'], false, C[16]); show('#grid', true, C[16]);
+    $('#grid .in').innerHTML = ['marea', 'gloss', 'leeward', 'pulse', 'tamarind', 'gilded'].map(k => `<div class="gp"><div class="scr"><img data-still="${still(k, PHONE)}"></div><span>${SITES[k].name}</span></div>`).join('');
+    tl.fromTo('#grid .gp', { y: 220, opacity: 0 }, { y: 0, opacity: 1, duration: .4, ease: 'silk', stagger: .03, immediateRender: false }, C[16]);
+    tl.fromTo('#grid .in', { scale: 1.1 }, { scale: .97, duration: C[17] - C[16], ease: 'none', immediateRender: false }, C[16]);
+    // the roll: flicker through every site on each hit
+    show('#grid', false, C[17]); show('#swA', true, C[17]);
+    const rollHits = [24.903, 25.124, 25.24, 25.472, 25.588, 25.704, 25.821, 25.937, 26.053, 26.169, 26.297, 26.413, 26.633, 26.761, 26.877, 26.982, 27.109, 27.225, 27.341, 27.458, 27.562].map(snap);
+    const order = ['marea', 'tamarind', 'gloss', 'soda', 'pulse', 'leeward', 'gilded'];
+    rollHits.forEach((t, k) => {
+      const site = order[k % order.length], name = fstill(site);
+      tl.call(() => { shotState.swA = { name, f0: Math.round(t * 30), off: 0, still: true }; }, null, t);
+      tl.fromTo('#swA', { scale: 1.08 }, { scale: 1, duration: .1, ease: 'power2.out', immediateRender: false }, t);
+    });
+    // breath: the wall of websites
+    show('#swA', false, C[18]); show('#wall', true, C[18]);
+    $('#wallPlane').innerHTML = wallHTML([['tamarind','d'],['marea','p'],['gloss','d'],['pulse','p'],['leeward','d'],['soda','p'],['gilded','d'],['marea','d'],['gloss','p'],['soda','d'],['tamarind','p'],['pulse','d'],['leeward','p'],['gilded','p']]);
+    tl.fromTo('#wallPlane', { x: 200, z: -150, rotateY: 26 }, { x: -1900, z: 0, rotateY: 20, duration: C[19] - C[18], ease: 'power1.inOut', immediateRender: false }, C[18]);
+    full(19, 'a5-marea-tap', 'marea'); tag(19, 'Tap to restyle the site');
+    desk(20, 'a5-marea-desk-scroll', 'marea', 'Scroll-driven story');
+    desk(21, 'a5-soda-desk', 'soda', 'Product configurator', { ry: 8 });
+    desk(22, 'a5-tamarind-desk', 'tamarind', 'Scroll-pinned menu');
+    // pull back to the whole wall, then the card
+    show(['#devBg', '#chip', '#dDesk'], false, C[23]); show('#wall', true, C[23]);
+    tl.fromTo('#wallPlane', { x: -1100, z: -300, rotateY: 0 }, { x: -1100, z: -1500, rotateY: 0, duration: C[24] - C[23], ease: 'power2.out', immediateRender: false }, C[23]);
+    show('#wall', false, T.end);
+    endCard(T.end, T.tag, T.cta);
+    return { T, M, SLOTS };
+  }
+
+  const { T, M, SLOTS } = [null, buildAd1, buildAd2, buildAd3, buildAd4, buildAd5][AD_N]();
   tl.set({}, {}, T.len);
 
   let frameNo = 0;
