@@ -206,36 +206,120 @@
   }
  ],
  "ad": {
-  "length": 15.5,
+  "length": 22.0,
   "fps": 30,
   "music": {
    "source_length": 8.102,
-   "loop_start": 3.5556,
-   "loop_end": 6.0227,
-   "loop_length": 2.4671,
-   "loops": 3,
-   "note": "drop phrase [loop_start, loop_end) repeated 3 extra times; original times after loop_end shift by +7.4013 s"
+   "intro_repeat": [
+    0.5457,
+    2.1159
+   ],
+   "loop": [
+    3.5556,
+    6.0227
+   ],
+   "loops": 5,
+   "segments": [
+    [
+     0,
+     2.1159
+    ],
+    [
+     0.5457,
+     2.1159
+    ],
+    [
+     2.1159,
+     6.0227
+    ],
+    [
+     3.5556,
+     6.0227
+    ],
+    [
+     3.5556,
+     6.0227
+    ],
+    [
+     3.5556,
+     6.0227
+    ],
+    [
+     3.5556,
+     6.0227
+    ],
+    [
+     3.5556,
+     6.0227
+    ],
+    [
+     6.0227,
+     8.102
+    ]
+   ],
+   "note": "repeat one intro phrase (+1.5702 s) so the DM hook runs ~5 s, then loop the drop phrase; original times after 6.0227 shift by +13.9057 s"
   },
-  "cuts": {
-   "drop": 3.6,
-   "switch_to_N02": 5.133,
-   "cursor_scatter": 6.033,
-   "notes": 7.567,
-   "collection": 8.5,
-   "switch_to_N03": 10.033,
-   "deep_zoom": 10.967,
-   "push_in": 12.5,
-   "second_drop": 13.467,
-   "end_card": 14.367,
-   "credit": 14.833,
-   "whatsapp_cta": 14.967,
-   "end": 15.5
-  },
-  "loop_drop_hits": [
-   3.587,
-   6.038,
-   8.505,
-   10.972
+  "shots": [
+   {
+    "t": 0,
+    "shot": "template site + rejection DM"
+   },
+   {
+    "t": 5.167,
+    "shot": "drop: MAREA hero reveal (letterboxed)"
+   },
+   {
+    "t": 6.7,
+    "shot": "MAREA switch to N02"
+   },
+   {
+    "t": 7.6,
+    "shot": "live MAREA site scrolling (phone)"
+   },
+   {
+    "t": 10.067,
+    "shot": "cursor scatters the swarm"
+   },
+   {
+    "t": 11.6,
+    "shot": "notes: Night-blooming cereus"
+   },
+   {
+    "t": 12.533,
+    "shot": "live soda site: hero entrance + cursor"
+   },
+   {
+    "t": 14.067,
+    "shot": "soda can macro (condensation)"
+   },
+   {
+    "t": 15.0,
+    "shot": "soda flavour switch: spin + blueberries"
+   },
+   {
+    "t": 17.467,
+    "shot": "zoom through DEEP"
+   },
+   {
+    "t": 19.0,
+    "shot": "push-in, switch to N03 Ember"
+   },
+   {
+    "t": 19.967,
+    "shot": "second drop: Ember burst"
+   },
+   {
+    "t": 20.433,
+    "shot": "blue can macro"
+   },
+   {
+    "t": 20.9,
+    "shot": "Portside Digital end card; tagline on 21.333, WhatsApp on 21.500"
+   },
+   {
+    "t": 22.0,
+    "shot": "end"
+   }
   ]
  }
 }

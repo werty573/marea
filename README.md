@@ -1,6 +1,11 @@
-# MAREA: Bottled from the deep
+# MAREA: Bottled from the deep (+ Soda)
 
-A concept site for a fictional Caribbean niche fragrance house, built by **Portside Digital** to show off award-level web animation. It comes with a 9:16 Instagram Reel ad generated from the site itself.
+Two concept sites built by **Portside Digital** to show off award-level web animation:
+
+- **MAREA** (`index.html`): a fictional Caribbean niche fragrance house.
+- **Soda** (`soda/index.html`): a fictional diet soda with a photoreal 3D can.
+
+It comes with a 22 s 9:16 Instagram Reel ad generated from both sites.
 
 > MAREA is fictional. The "Reserve" and "Concept site" links go to Portside Digital on WhatsApp (868-259-1409).
 
@@ -32,25 +37,37 @@ npx playwright install chromium
 node scripts/check.mjs shots
 ```
 
+## Soda (`soda/`)
+
+The soda site is a full-screen hero (no scroll), live at `/soda/`:
+- **Photoreal can**, modelled in code: a lathe-turned aluminium body with neck, rolled rim, recessed lid, pull tab and domed base. The printed wrap, metal/roughness map and cold-can **condensation** (thousands of droplets turned into a normal map, plus a wet clearcoat mask) are all drawn in code.
+- **Cherries and blueberries** with real materials (clearcoat skin, dusty bloom sheen) and leaves. The berries in front sit above the copy and the can sits behind it. They drift, get pushed away by the cursor and spring back.
+- **Flavour switch**: an animated radial-gradient flood (registered `@property` colours), a 720° spin with velocity motion blur, and the wrap swaps at the peak. The berries implode, swap cherry ↔ blueberry, then explode to new positions.
+- The **flavour cards** use live renders of the same can, and the rising bubbles are frame-exact.
+- `?cam=macro` gives a product close-up; `?flavor=blue` starts on Zero Lime.
+- Check it: `node scripts/check-soda.mjs shots`.
+
 ## The ad
 
-`ad/ad.mp4` is 1080×1920, 30 fps, H.264 + AAC, 15.5 s. `ad/ad-silent.mp4` is the same video without audio.
+`ad/ad.mp4` is 1080×1920, 30 fps, H.264 + AAC, 22 s. `ad/ad-silent.mp4` is the same video without audio.
 
-It's modelled on the structure of [this reel](https://www.instagram.com/reel/DdAgrCAO4km/): a rejection DM over boring footage, then a hard cut on the drop to the flex, with a caption that stays on screen. The analysis is in `reference/reel-analysis.md` and the beat map is in `reference/beats.json`. The reel's song is only 8.1 s, so the drop phrase (3.556–6.023 s, cut just before each drop transient) is looped three more times. Every repeat opens on a drop hit.
+It's modelled on the structure of [this reel](https://www.instagram.com/reel/DdAgrCAO4km/): a rejection DM over a boring site, then a hard cut on the drop to the flex, with the caption held across every shot. The analysis is in `reference/reel-analysis.md` and the beat map is in `reference/beats.json`. The reel's song is only 8.1 s, so one intro phrase (0.546–2.116 s) repeats to give the DM about 5 s. Then the drop phrase (3.556–6.023 s) loops five times. Every seam sits just before an onset, and every cut is within one frame of its hit.
 
 | Time | Shot |
 |---|---|
-| 0.00–3.60 | Bland template site with a "sorry, only big brands" DM |
-| 3.60 (drop) | Hard cut to MAREA, letterboxed; caption "Your loss lil bro" |
-| 5.13 | Scent switch → N°02, colour swaps on the 5.43 hit |
-| 6.03 (drop) | Wide angle, a cursor scatters the swarm |
-| 7.57 | Notes: "Night-blooming cereus" |
-| 8.50 (drop) | The collection slides across |
-| 10.03 | Scent switch → N°03 Ember |
-| 10.97 (drop) | Zoom through "DEEP" |
-| 12.50 | Push-in, fast switch back to N°01 |
-| 13.47 (2nd drop) | Wide burst |
-| 14.37 | End card; credit on 14.83, WhatsApp CTA on 14.97 |
+| 0.00 | Template site + "only for big brands" DM |
+| 5.17 (drop) | MAREA reveal, letterboxed; caption "Your loss lil bro" |
+| 6.70 | MAREA → N°02 |
+| 7.60 (drop) | The real MAREA site scrolling on a phone |
+| 10.07 (drop) | Cursor scatters the swarm |
+| 11.60 | Notes: "Night-blooming cereus" |
+| 12.53 (drop) | The real soda site: entrance + cursor |
+| 14.07 | Can macro, condensation |
+| 15.00 (drop) | Soda flavour switch → blueberries |
+| 17.47 (drop) | Zoom through "DEEP" |
+| 19.00 | Push-in, switch to N°03 Ember |
+| 19.97 (2nd drop) | Ember burst; 20.43 blue can macro |
+| 20.90 | Portside Digital end card; tagline 21.33, WhatsApp 21.50 |
 
 The ad is a mode of the site: open `index.html?ad=1` to see the 1080×1920 layout. To re-record it:
 
@@ -59,7 +76,11 @@ yt-dlp -o "reference/reel.%(ext)s" "https://www.instagram.com/reel/DdAgrCAO4km/"
 node ad/record.mjs
 ```
 
-The recorder renders each frame `i` at exactly `t = i / 30` (fixed-step physics, a GSAP timeline that seeks to each frame), so every cut lands on its beat. It then builds the soundtrack from the reel's audio (`ad/music.m4a`, AAC 192k, sample-accurate loop of the drop phrase with 4 ms seam fades) and muxes both from t = 0. Use `node ad/record.mjs --frames` to render frames only.
+How the recorder works:
+
+- **Base video:** it renders the base timeline frame by frame at exactly `t = i / 30` (fixed-step physics and a GSAP timeline that seeks to each frame).
+- **Live clips:** it records the live-site clips with Playwright's fake clock (1/30 s per frame) and splices them into the base timeline's slots, then lays the caption over them.
+- **Soundtrack:** it builds the soundtrack from the reel's audio (`ad/music.m4a`, AAC 192k, sample-accurate loop of the drop phrase with 4 ms seam fades) and muxes both from t = 0. Use `node ad/record.mjs --frames` to render frames only.
 
 ## Credits
 

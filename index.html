@@ -9,7 +9,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
@@ -293,7 +293,13 @@ body.ad #ad{display:block}
 .dm-read b{color:#c7c7cc;font-weight:600}
 .dm-row + .dm-row{margin-top:12px}
 /* end card */
-.endcard{z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(80% 60% at 50% 42%,rgba(5,4,12,.82),rgba(5,4,12,.97))}
+.endcard{z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(100% 60% at 80% 18%,#17396A 0%,#0B1F3A 55%,#071528 100%)}
+.pd-mark{width:150px;height:170px;margin-bottom:56px}
+.pd-word{font:800 104px/1 Sora,sans-serif;letter-spacing:-.04em;color:#fff}
+.pd-word i{font-style:normal;color:#00B3A6}
+.pd-tag{margin-top:40px;font:600 56px/1.1 'Inter Tight',sans-serif;color:#fff}
+.pd-tag u{text-decoration:none;color:#FF6B5E;box-shadow:inset 0 -8px 0 rgba(255,107,94,.35)}
+.pd-by{margin-top:110px;font:500 28px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6)}
 .ec-mark{width:120px;height:120px;border-radius:50%;margin-bottom:60px;background:radial-gradient(circle at 35% 30%,#fff 0 7%,var(--glow) 30%,var(--accent) 62%,#05040c 100%);box-shadow:0 0 90px var(--glow)}
 .ec-word{display:flex;font-family:var(--serif);font-size:210px;line-height:.85;letter-spacing:.06em}
 .ec-word .ch{display:inline-block;overflow:hidden;padding-bottom:.06em}
@@ -460,7 +466,7 @@ const AD = Q.has('ad');
 const RM = !AD && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const COARSE = matchMedia('(pointer: coarse)').matches;
 const MOBILE = AD ? false : (innerWidth < 760 || COARSE);
-const DPR = AD ? 1 : Math.min(devicePixelRatio || 1, MOBILE ? 1.5 : 2);
+const DPR = AD ? 1 : Q.has('dpr') ? +Q.get('dpr') : Math.min(devicePixelRatio || 1, MOBILE ? 1.5 : 2);
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
@@ -1307,6 +1313,7 @@ async function initSite() {
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add(time => lenis.raf(time * 1000));
     lenis.stop();
+    window.__lenis = lenis;
     $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
       const id = a.getAttribute('href'); if (id.length < 2) return;
       e.preventDefault(); lenis.scrollTo(id === '#top' ? 0 : id, { duration: 2.2, easing: t => 1 - Math.pow(1 - t, 4) });
@@ -1538,47 +1545,56 @@ function initAd() {
     <div class="ad-layer ad-cap-layer"><div class="ad-caption" id="adCap">Your loss lil bro</div></div>
     <div class="ad-layer tpl" id="tpl">
       <div class="tpl-inner" id="tplInner">
-        <div class="tpl-head"><span>PERFUME CO.</span><span class="tpl-burger"></span></div>
+        <div class="tpl-head"><span>BUSINESS CO.</span><span class="tpl-burger"></span></div>
         <div class="tpl-scroll" id="tplScroll">
           <div class="tpl-hero"><svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.2"><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M3 18l6-5 4 3 3-2 5 4"/></svg></div>
           <h1>Welcome to Our Website</h1>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. We sell the best perfumes at great prices.</p>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. We offer the best products at great prices.</p>
           <span class="tpl-btn">Shop Now</span>
           <div class="tpl-grid"><div>Product 1 — $50.00</div><div>Product 2 — $50.00</div><div>Product 3 — $50.00</div><div>Product 4 — $50.00</div></div>
         </div>
       </div>
       <div class="dm">
-        <div class="dm-row me"><div class="dm-b">Can my perfume brand get a site that actually moves?</div></div>
+        <div class="dm-row me"><div class="dm-b">Can my brand get a website that actually moves?</div></div>
         <div class="dm-read"><b>Read</b> 10:52 PM</div>
         <div class="dm-row"><div class="dm-b">Unfortunately animated 3D websites are only for big brands.</div></div>
         <div class="dm-row"><div class="dm-b">Thanks for reaching out but we can't take this on. Good luck!</div></div>
       </div>
     </div>
+    <div class="ad-layer" id="adHole" style="z-index:9;background:#000"></div>
     <div class="ad-layer endcard" id="end">
-      <div class="ec-mark" id="ecMark"></div>
-      <div class="ec-word" id="ecWord">${split('MAREA')}</div>
-      <div class="ec-tag" id="ecTag">Bottled from the deep.</div>
-      <div class="ec-by" id="ecBy">Concept build by Portside Digital</div>
-      <div class="ec-cta" id="ecCta">${wa}<span>868-259-1409</span></div>
+      <svg id="pdMark" class="pd-mark" viewBox="0 0 26.4 30"><rect width="10" height="30" rx="2.4" fill="#fff"/><path d="M13.8 0H18.2A8.2 8.2 0 0 1 18.2 16.4H13.8A2.4 2.4 0 0 1 11.4 14V2.4A2.4 2.4 0 0 1 13.8 0Z" fill="#00B3A6"/><rect x="11.4" y="17.8" width="6.6" height="6.6" rx="2" fill="#FF6B5E"/></svg>
+      <div class="pd-word" id="pdWord">Portside <i>Digital</i></div>
+      <div class="pd-tag" id="pdTag">Websites that <u>work.</u></div>
+      <div class="pd-by" id="pdBy">Concept builds · Trinidad &amp; Tobago</div>
+      <div class="ec-cta" id="pdCta">${wa}<span>868-259-1409</span></div>
     </div>`;
 
-  // beat map — reference/beats.json. The reel's music is 8.1 s; the ad loops its drop phrase
-  // [p1, p2) (first drop → second drop, cut just before each transient) `loops` more times, so every
-  // repeat opens on a drop hit. Anything after p2 in the original shifts by loops × L.
-  const M = { p1: 3.5556, p2: 6.0227, loops: 3, src: 8.102 };
-  const L = M.p2 - M.p1, SH = M.loops * L;
+  // beat map — reference/beats.json. The reel's music is 8.1 s. The ad (1) repeats one intro phrase
+  // [0.5457, 2.1159) so the DM hook gets ~5 s, then (2) loops the drop phrase [p1, p2) `loops` more times.
+  // Every seam sits just before an onset; anything after a seam shifts by the inserted length.
+  const M = { p1: 3.5556, p2: 6.0227, loops: 5, src: 8.102, i1: .5457, i2: 2.1159 };
+  const E = M.i2 - M.i1, L = M.p2 - M.p1, SH = E + M.loops * L;
+  M.segs = [[0, M.i2], [M.i1, M.i2], [M.i2, M.p2], ...Array(M.loops).fill([M.p1, M.p2]), [M.p2, M.src]];
   // looped drops hit ~15 ms after each seam (measured on the export); every cut snaps to the nearest frame
-  const blk = k => k ? M.p1 + k * L + .015 : 3.587;
+  const blk = k => k ? M.p1 + E + k * L + .015 : 3.587 + E;
   const snap = t => Math.round(t * 30) / 30 - .001;
   const T0 = {
-    drop: blk(0), cut2: blk(0) + 1.533,                           // orig 3.587 / 5.12
-    b1: blk(1), b1c: blk(1) + 1.533,
-    b2: blk(2), b2c: blk(2) + 1.533,
-    b3: blk(3), b3c: blk(3) + 1.533,
-    drop2: 6.049 + SH, end: 6.978 + SH, hit1: 7.43 + SH, hit2: 7.581 + SH,
+    drop: blk(0), b0c: blk(0) + 1.533,
+    b1: blk(1), b2: blk(2), b2c: blk(2) + 1.533, b3: blk(3), b3c: blk(3) + 1.533,
+    b4: blk(4), b5: blk(5), b5c: blk(5) + 1.533,
+    drop2: 6.049 + SH, d2hit: 6.049 + SH + .465, end: 6.978 + SH, hit1: 7.43 + SH, hit2: 7.581 + SH,
   };
   const T = Object.fromEntries(Object.entries(T0).map(([k, v]) => [k, snap(v)]));
   T.len = Math.round((M.src + SH) * 30) / 30;
+  // windows filled by live-site recordings (ad/record.mjs) — the page shows black there
+  const SLOTS = [
+    { name: 'marea-scroll', from: T.b1, to: T.b2 },
+    { name: 'soda-hero', from: T.b3, to: T.b3c },
+    { name: 'soda-macro', from: T.b3c, to: T.b4 },
+    { name: 'soda-switch', from: T.b4, to: T.b5 },
+    { name: 'soda-blue', from: T.d2hit, to: T.end },
+  ];
   const sub = [.465, .929, 1.382];                                // strong hits inside every block
   const grain = $('.grain');
   const tl = gsap.timeline({ paused: true });
@@ -1587,13 +1603,14 @@ function initAd() {
   const pulse = (at, v = .9) => tl.fromTo(fxState, { surge: v }, { surge: 0, duration: .4, ease: 'power2.out', immediateRender: false }, at);
 
   // initial state
-  gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep'], { autoAlpha: 0 });
+  gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep', '#adHole'], { autoAlpha: 0 });
   gsap.set('#tpl', { autoAlpha: 1 });
-  gsap.set('#adTitle .ch b, #ecWord .ch b', { yPercent: 115 });
-  gsap.set(['#ecMark', '#ecTag', '#ecBy', '#ecCta'], { opacity: 0 });
+  gsap.set('#adTitle .ch b', { yPercent: 115 });
+  gsap.set(['#pdMark', '#pdWord', '#pdTag', '#pdBy', '#pdCta'], { opacity: 0 });
   Object.assign(stage, { x: 0, y: -.06, s: .82, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1 });
   Object.assign(intro, { y: -4.5, spin: -Math.PI*2, swarm: 1, p: 0 });
   fxState.collapse = 0;
+  SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
 
   // ── 0 → drop: bland template + rejection DM, faux handheld drift ──
   const shake = { t: 0 };
@@ -1601,7 +1618,7 @@ function initAd() {
     const t = shake.t;
     const n = (a, b) => Math.sin(t*a) * .6 + Math.sin(t*b + 1.3) * .4;
     $('#tplInner').style.transform = `translate(${n(1.7, 3.1)*10}px,${n(2.3, 1.1)*12}px) rotate(${n(1.3, 2.9)*.5}deg) scale(1.03)`;
-    $('#tplScroll').style.transform = `translateY(${-gsap.parseEase('power1.inOut')(Math.min(t/3.4, 1)) * 520}px)`;
+    $('#tplScroll').style.transform = `translateY(${-gsap.parseEase('power1.inOut')(Math.min(t/(T.drop - .2), 1)) * 700}px)`;
   } }, 0);
 
   // ── drop: hard cut, letterbox, bottle rises, MAREA reveals ──
@@ -1612,85 +1629,76 @@ function initAd() {
     .fromTo(intro, { swarm: 1 }, { swarm: 0, duration: 1.3, ease: 'silk' }, T.drop + .05)
     .to('#adTitle .ch b', { yPercent: 0, duration: .9, ease: 'silk', stagger: .06 }, T.drop + .04);
   sub.forEach(o => pulse(T.drop + o));
-  tl.fromTo(stage, { camZ: 10.6 }, { camZ: 9.6, duration: T.cut2 - T.drop, ease: 'none', immediateRender: false }, T.drop);
+  tl.fromTo(stage, { camZ: 10.6 }, { camZ: 9.6, duration: T.b0c - T.drop, ease: 'none', immediateRender: false }, T.drop);
 
   // ── full frame, close: switch → N°02 spins through the block's big hit ──
-  show(['#barT', '#barB', '#adTitle'], false, T.cut2); show('#adNav', true, T.cut2);
-  cutTo(T.cut2, { camZ: 7.6, y: .02 });
-  tl.add(buildScentTL(1, .5, .52, 1.62).paused(false), T.cut2);
-  tl.to(stage, { camZ: 8.3, duration: T.b1 - T.cut2, ease: 'none' }, T.cut2);
+  show(['#barT', '#barB', '#adTitle'], false, T.b0c); show('#adNav', true, T.b0c);
+  cutTo(T.b0c, { camZ: 7.6, y: .02 });
+  tl.add(buildScentTL(1, .5, .52, 1.62).paused(false), T.b0c);
+  tl.to(stage, { camZ: 8.3, duration: T.b1 - T.b0c, ease: 'none' }, T.b0c);
 
-  // ── block 1 drop: wide, a cursor sweeps through and scatters the swarm ──
-  cutTo(T.b1, { camZ: 12.5, y: .1, x: -.12, ry: 1.05, rx: .18 });
-  pulse(T.b1, 1); sub.forEach(o => pulse(T.b1 + o, .6));
-  show(['#adCursor', '#adUI'], true, T.b1);
+  // ── block 1: [slot] the real MAREA site scrolling on a phone ──
+
+  // ── block 2: wide, a cursor sweeps through and scatters the swarm ──
+  cutTo(T.b2, { camZ: 12.5, y: .1, x: -.12, ry: 1.05, rx: .18 });
+  pulse(T.b2, 1); sub.forEach(o => pulse(T.b2 + o, .6));
+  show(['#adCursor', '#adUI'], true, T.b2);
   const cur = { x: 120, y: 760 };
   const placeCursor = () => {
     pointer.px = cur.x; pointer.py = cur.y;
     pointer.x = cur.x / 1080 * 2 - 1; pointer.y = -(cur.y / 1920) * 2 + 1;
     $('#adCursor').style.transform = `translate(${cur.x}px,${cur.y}px)`;
   };
-  tl.set(pointer, { active: true }, T.b1);
-  tl.fromTo(cur, { x: 80, y: 700 }, { x: 980, y: 1120, duration: .62, ease: 'power2.inOut', onUpdate: placeCursor, immediateRender: false }, T.b1 + .04)
-    .to(cur, { x: 180, y: 1350, duration: .55, ease: 'power2.inOut', onUpdate: placeCursor }, T.b1 + .7)
-    .to(cur, { x: 700, y: 880, duration: .3, ease: 'power3.out', onUpdate: placeCursor }, T.b1 + 1.25);
-  tl.to(stage, { camZ: 10.6, ry: .7, duration: T.b1c - T.b1, ease: 'power1.in' }, T.b1);
+  tl.set(pointer, { active: true }, T.b2);
+  tl.fromTo(cur, { x: 80, y: 700 }, { x: 980, y: 1120, duration: .62, ease: 'power2.inOut', onUpdate: placeCursor, immediateRender: false }, T.b2 + .04)
+    .to(cur, { x: 180, y: 1350, duration: .55, ease: 'power2.inOut', onUpdate: placeCursor }, T.b2 + .7)
+    .to(cur, { x: 700, y: 880, duration: .3, ease: 'power3.out', onUpdate: placeCursor }, T.b2 + 1.25);
+  tl.to(stage, { camZ: 10.6, ry: .7, duration: T.b2c - T.b2, ease: 'power1.in' }, T.b2);
 
   // ── notes: "Night-blooming cereus" reveals while the bottle turns ──
-  tl.set(pointer, { active: false }, T.b1c);
-  show(['#adCursor', '#adUI'], false, T.b1c); show('#adNote', true, T.b1c);
-  cutTo(T.b1c, { camZ: 10, y: -.3, x: .12, s: .78, ry: -.6, spread: .55, ps: .7 });
-  tl.fromTo('#adNote .h b', { yPercent: 110 }, { yPercent: 0, duration: .7, ease: 'silk', stagger: .08, immediateRender: false }, T.b1c)
-    .fromTo('#adNote .k', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.b1c + .05)
-    .to(stage, { ry: .9, duration: T.b2 - T.b1c, ease: 'power2.inOut' }, T.b1c);
-  pulse(T.b1c + .313);
+  tl.set(pointer, { active: false }, T.b2c);
+  show(['#adCursor', '#adUI'], false, T.b2c); show('#adNote', true, T.b2c);
+  cutTo(T.b2c, { camZ: 10, y: -.3, x: .12, s: .78, ry: -.6, spread: .55, ps: .7 });
+  tl.fromTo('#adNote .h b', { yPercent: 110 }, { yPercent: 0, duration: .7, ease: 'silk', stagger: .08, immediateRender: false }, T.b2c)
+    .fromTo('#adNote .k', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.b2c + .05)
+    .to(stage, { ry: .9, duration: T.b3 - T.b2c, ease: 'power2.inOut' }, T.b2c);
+  pulse(T.b2c + .313);
+  show(['#adNote', '#adNav'], false, T.b3);
 
-  // ── block 2 drop: the collection slides across ──
-  show(['#adNote', '#adNav'], false, T.b2); show('#adCards', true, T.b2);
-  cutTo(T.b2, { y: -3, ps: 0 });
-  tl.fromTo('#adTrack', { x: 560 }, { x: -1200, duration: T.b2c - T.b2, ease: 'power2.inOut', immediateRender: false }, T.b2)
-    .fromTo('#adCards .hh, #adCards .eb', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', stagger: .06, immediateRender: false }, T.b2);
+  // ── blocks 3–4: [slots] the soda can site: hero, macro, flavour switch ──
 
-  // ── switch → N°03 Ember; the spin peaks on the block's big hit ──
-  show('#adCards', false, T.b2c); show('#adNav', true, T.b2c);
-  cutTo(T.b2c, { camZ: 7.9, y: .02 });
-  tl.add(buildScentTL(2, .5, .3, 1.62).paused(false), T.b2c);
-  tl.to(stage, { camZ: 8.6, duration: T.b3 - T.b2c, ease: 'none' }, T.b2c);
+  // ── block 5: zoom through DEEP ──
+  show('#adDeep', true, T.b5);
+  cutTo(T.b5, { camZ: 9.5, y: -.02, s: .9 });
+  tl.call(() => { const b = $('#adDeepText text').getExtentOfChar(2); gsap.set('#adDeepText', { svgOrigin: `${b.x + b.width*.14} ${b.y + b.height*.62}`, scale: 1 }); }, null, T.b5);
+  tl.set(['#adDeepInk', '#adDeepK'], { opacity: 1 }, T.b5);
+  tl.to('#adDeepText', { scale: 40, duration: T.b5c - T.b5, ease: 'power3.in' }, T.b5)
+    .to('#adDeepK', { opacity: 0, y: -40, duration: .4, ease: 'power2.in' }, T.b5 + .5)
+    .to('#adDeepInk', { opacity: 0, duration: .45, ease: 'power1.in' }, T.b5c - .45);
 
-  // ── block 3 drop: zoom through DEEP ──
-  show('#adNav', false, T.b3); show('#adDeep', true, T.b3);
-  cutTo(T.b3, { camZ: 9.5, y: -.02, s: .9 });
-  // zoom into the thick stem of the second E so the frame fills with the scene, never with ink
-  tl.call(() => { const b = $('#adDeepText text').getExtentOfChar(2); gsap.set('#adDeepText', { svgOrigin: `${b.x + b.width*.14} ${b.y + b.height*.62}`, scale: 1 }); }, null, T.b3);
-  tl.set(['#adDeepInk', '#adDeepK'], { opacity: 1 }, T.b3);
-  tl.to('#adDeepText', { scale: 40, duration: T.b3c - T.b3, ease: 'power3.in' }, T.b3)
-    .to('#adDeepK', { opacity: 0, y: -40, duration: .4, ease: 'power2.in' }, T.b3 + .5)
-    .to('#adDeepInk', { opacity: 0, duration: .45, ease: "power1.in" }, T.b3c - .45);
-
-  // ── push-in on the Ember bottle, then a fast switch back to N°01 that bursts on the second drop ──
-  show('#adDeep', false, T.b3c); show('#adNav', true, T.b3c);
-  cutTo(T.b3c, { camZ: 9.2, y: 0, ry: -.3 });
-  tl.to(stage, { camZ: 7.4, ry: .2, duration: T.drop2 - T.b3c, ease: 'power2.in' }, T.b3c);
-  tl.add(buildScentTL(0, .5, .5, 2.4).paused(false), T.drop2 - .25);
+  // ── push-in, then a fast switch to N°03 Ember that bursts on the second drop ──
+  show('#adDeep', false, T.b5c); show('#adNav', true, T.b5c);
+  cutTo(T.b5c, { camZ: 9.2, y: 0, ry: -.3 });
+  tl.to(stage, { camZ: 7.4, ry: .2, duration: T.drop2 - T.b5c, ease: 'power2.in' }, T.b5c);
+  tl.add(buildScentTL(2, .5, .5, 2.4).paused(false), T.drop2 - .25);
   cutTo(T.drop2, { camZ: 11.5, y: .02, rx: .1 });
   pulse(T.drop2, 1);
-  tl.to(stage, { camZ: 10.2, duration: T.end - T.drop2, ease: 'power1.out' }, T.drop2);
+  tl.to(stage, { camZ: 10.4, duration: T.end - T.drop2, ease: 'power1.out' }, T.drop2);
 
-  // ── end card: brand + CTA; credit and CTA on the last two hits ──
+  // ── end card: Portside Digital lockup; tagline and CTA land on the last two hits ──
   show(['#adTop', '#adNav', '#adCap'], false, T.end);
   tl.fromTo('#end', { autoAlpha: 0 }, { autoAlpha: 1, duration: .06, ease: 'none', immediateRender: false }, T.end)
-    .fromTo('#ecMark', { scale: .2, opacity: 0 }, { scale: 1, opacity: 1, duration: .5, ease: 'surge', immediateRender: false }, T.end)
-    .to('#ecWord .ch b', { yPercent: 0, duration: .6, ease: 'silk', stagger: .045 }, T.end + .02)
-    .fromTo('#ecTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.end + .2)
-    .fromTo('#ecBy', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .4, ease: 'silk', immediateRender: false }, T.hit1)
-    .fromTo('#ecCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .45, ease: 'surge', immediateRender: false }, T.hit2)
-    .fromTo('#ecMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit1)
-    .fromTo('#ecMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit2);
+    .fromTo('#pdMark', { scale: .3, opacity: 0, rotate: -12 }, { scale: 1, opacity: 1, rotate: 0, duration: .5, ease: 'surge', immediateRender: false }, T.end)
+    .fromTo('#pdWord', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .45, ease: 'silk', immediateRender: false }, T.end + .08)
+    .fromTo('#pdTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .4, ease: 'silk', immediateRender: false }, T.hit1)
+    .fromTo('#pdBy', { opacity: 0 }, { opacity: 1, duration: .4, ease: 'silk', immediateRender: false }, T.hit1 + .05)
+    .fromTo('#pdCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .45, ease: 'surge', immediateRender: false }, T.hit2)
+    .fromTo('#pdMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit2);
   tl.set({}, {}, T.len);
 
   let frameNo = 0;
   window.__ad = {
-    duration: T.len, fps: 30, cuts: T, music: M,
+    duration: T.len, fps: 30, cuts: T, music: M, slots: SLOTS,
     async ready() { await Promise.all([document.fonts.ready, envReady]); drawLabel(SCENTS[0]); render(); return true; },
     // render frame i at exactly i/fps — physics step is fixed so every render is identical
     frame(i) {
