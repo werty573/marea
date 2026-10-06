@@ -11,8 +11,8 @@
 | 10.0–34.3 | **The song.** Cinematic real-estate shots, cut at 11.63, 12.93, 13.63, 14.2, 15.57, 16.47, 17.13, 17.83, 18.5, 19.57, 20.57, 21.4, 22.1, 22.77, 23.43, 24.17 and 24.87. A rapid flicker roll from 25.0 to 27.7 (a cut every ~4 frames on the hits), a breath at 28.4–29.6, then 29.77, 30.43, 31.5 and 33.27. |
 | 34.3–37.4 | Skyline outro; the song ends at ~36.5. |
 
-**Ad 5** (`ad/ad5.mp4`, 37.4 s, the reference's audio as-is) works like this:
-- It keeps the original footage untouched up to 8.97 s: the near-miss, the swipe out of Instagram, Calculator, Safari.
-- Then Safari is flicked away to reveal a **MAREA** card, which opens full screen into the live site.
-- The song carries ~20 live shots of all seven sites on the reference's cut points: full-screen phone recordings with a browser bar and feature tags, plus desktop shots in a browser frame.
-- The flicker roll becomes a rapid cut through every site, the breath becomes a slow pan along a wall of websites, and it pulls back to the whole wall before the Portside card on the 34.3 s hit.
+**Ad 5** (`ad/ad5.mp4`, 37.4 s, the reference's audio as-is):
+- The original Reel (the near-miss) plays untouched to its last frame (5.93 s).
+- From the swipe-up on, the app switcher is rebuilt so none of the reference's other apps show. The Reel shrinks into its card, then a flick to Calculator (taken from the footage). The card peeking behind it is our own Safari search, "how to get a website that actually moves", with an answer about scroll-driven, fast, bookable sites.
+- A flick brings that search to the middle with a MAREA card peeking. A slide past it brings MAREA to the middle, a tap opens it full screen as the song starts.
+- The song carries ~20 live shots of all seven sites on the reference's cut points, a flicker roll through every site, the wall of websites, and the Portside card on the 34.3 s hit.

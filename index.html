@@ -263,12 +263,30 @@ body.ad #ad{display:block}
 #flash{z-index:13;background:#fff}
 #thumbL{z-index:3;background:#000}
 #r5{z-index:4;background:#111;overflow:hidden}
-#r5bg{position:absolute;inset:-60px;width:1200px;height:2040px;object-fit:cover;filter:blur(38px) brightness(.62) saturate(1.1)}
-#r5safari{position:absolute;inset:0;width:1080px;height:1920px;clip-path:inset(36px 166px 178px 166px round 70px);z-index:3}
-#r5card{position:absolute;left:172px;top:135px;width:738px;height:1602px;border-radius:74px;overflow:hidden;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.45);z-index:2}
-#r5card img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
-#r5lbl{position:absolute;left:258px;top:48px;display:flex;align-items:center;gap:22px;z-index:2;font:600 44px/1 -apple-system,'SF Pro Display','Inter Tight',sans-serif;color:#fff}
-#r5lbl i{width:70px;height:70px;border-radius:16px;background:radial-gradient(circle at 35% 30%,#fff 0 7%,#7ff3ff 30%,#6a3dff 64%,#05040c 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+#r5bg{position:absolute;inset:-80px;width:1240px;height:2080px;object-fit:cover;filter:blur(60px) brightness(.42) saturate(1.2)}
+.r5c{position:absolute;left:172px;top:135px;width:738px;height:1602px;border-radius:74px;overflow:hidden;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.r5c img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+#r5card{z-index:2}#r5srch{z-index:3}#r5calc{z-index:4}#r5ig{z-index:5}
+#r5calc img{position:absolute;left:-190px;top:-135px;width:1080px;height:1920px;object-fit:fill}
+#r5srch{background:#fff;color:#1f1f1f;font-family:-apple-system,'SF Pro Text','Inter Tight',sans-serif}
+#r5srch .sb{position:absolute;left:36px;right:36px;top:120px;min-height:86px;border-radius:43px;background:#f1f3f4;display:flex;align-items:center;justify-content:space-between;padding:0 34px;font-size:30px;color:#202124}
+#r5srch .sb .x{color:#5f6368}
+#r5ans{position:absolute;left:36px;right:36px;top:250px;font-size:29px;line-height:1.42}
+#r5ans .lead mark{background:#d3e3fd;color:inherit;padding:2px 0}
+#r5ans h4{margin:34px 0 14px;font-size:33px;font-weight:700}
+#r5ans ul{margin:0;padding-left:30px}#r5ans li{margin-bottom:14px}
+#r5ans .more{margin-top:26px;display:inline-block;padding:16px 26px;border-radius:30px;background:#0B1F3A;color:#fff;font-weight:600;font-size:27px}
+#r5srch .bar{position:absolute;left:28px;right:28px;bottom:118px;height:84px;border-radius:24px;background:#f2f2f7;display:flex;align-items:center;gap:20px;padding:0 26px;font-size:28px;color:#3c3c43}
+#r5srch .bar .u{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#r5srch .tb{position:absolute;left:0;right:0;bottom:24px;display:flex;justify-content:space-around;font-size:40px;color:#007aff}
+#r5peek{position:absolute;left:76px;top:62px;width:66px;height:66px;border-radius:15px;z-index:6}
+#r5lbl i,#r5peek{display:inline-block;background-size:cover}
+.ic-calc{background:linear-gradient(#3a3a3c,#1c1c1e)!important;position:relative}
+.ic-calc::after{content:'';position:absolute;inset:18px 20px;border-radius:4px;background:radial-gradient(circle,#ff9f0a 0 3px,transparent 3.5px) 0 0/12px 12px}
+.ic-safari{background:radial-gradient(circle at 50% 50%,#fff 0 6%,transparent 6.5%),conic-gradient(from 45deg,#ff3b30 0 8%,#fff 8% 50%,#ff3b30 50% 58%,#fff 58%) center/40% 40% no-repeat,radial-gradient(circle,#4fc3f7 0 55%,#1e88e5 56% 68%,#fff 69%)!important}
+.ic-marea{background:radial-gradient(circle at 35% 30%,#fff 0 7%,#7ff3ff 30%,#6a3dff 64%,#05040c 100%)!important}
+#r5lbl{position:absolute;left:258px;top:48px;display:flex;align-items:center;gap:22px;z-index:6;font:600 44px/1 -apple-system,'SF Pro Display','Inter Tight',sans-serif;color:#fff}
+#r5lbl i{width:70px;height:70px;border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 .th-txt{position:absolute;left:70px;top:150px;display:flex;flex-direction:column;align-items:flex-start;color:#fff;line-height:.9}
 .th-txt span{font:800 58px/1 Rubik,sans-serif;letter-spacing:.01em}
 .th-txt b{font:900 132px/1 Rubik,sans-serif;letter-spacing:.01em;margin:6px 0 6px 44px}
@@ -1718,8 +1736,18 @@ function initAd() {
         <g id="th-bl" style="display:none;filter:url(#sblur)" opacity=".8"><path d="M960 1920 C 900 1720 820 1560 720 1420 C 640 1310 560 1250 530 1190 C 506 1140 540 1090 600 1110 C 660 1130 700 1220 760 1290 C 860 1400 960 1500 1080 1560" stroke-dasharray="40 18"/></g>
       </svg>
     </div>
-    <div class="ad-layer" id="r5"><img id="r5bg" alt=""><img id="r5safari" alt="">
-      <div id="r5lbl"><i></i><span>MAREA</span></div><div id="r5card"><img alt=""></div></div>
+    <div class="ad-layer" id="r5"><img id="r5bg" alt="">
+      <div id="r5peek"></div><div id="r5lbl"><i></i><span></span></div>
+      <div class="r5c" id="r5card"><img alt=""></div>
+      <div class="r5c" id="r5srch"><div class="sb"><span class="q" id="r5q"></span><span class="x">✕</span></div>
+        <div id="r5ans"><p class="lead">A website that moves feels <mark>alive the moment it loads</mark>. It guides people with motion and gets them to book, buy or message you.</p>
+          <h4>What it needs</h4>
+          <ul><li><b>Scroll-driven animation</b> that tells your story as people scroll.</li><li><b>Fast on phones.</b> Most visitors arrive on mobile, so it should load in about 2 seconds.</li><li><b>Real actions built in:</b> booking calendars, quotes, orders, WhatsApp.</li><li><b>A design that fits your brand</b>, not a template.</li></ul>
+          <div class="more">Websites built this way ↓</div></div>
+        <div class="bar"><span>⌕</span><span class="u">how to get a website that actually mo…</span><span>🎙</span></div>
+        <div class="tb"><span>‹</span><span>›</span><span>⇪</span><span>⊞</span><span>⧉</span></div></div>
+      <div class="r5c" id="r5calc"><img alt=""></div>
+      <div class="r5c" id="r5ig"><img alt=""></div></div>
     <div class="ad-layer sw" id="swA"><img alt=""></div>
     <div class="ad-layer sw" id="swB"><img alt=""></div>
     <div class="ad-layer" id="mbar"><div class="pill"><span class="aa">AA</span><span class="lock">🔒</span><span class="u"></span><span class="rl">↻</span></div></div>
@@ -2200,10 +2228,11 @@ function initAd() {
     // the reference's audio plays as-is: the Reel's own sound, the silent app switcher, then the song from 10.0 s
     const M = { file: 'reference/reel5/reel.mp4', src: 37.383 };
     M.segs = [[0, M.src]];
-    const T = { cardIn: snap(8.967), cardLabel: snap(9.1), open: snap(9.9), opened: snap(10.15), end: snap(34.3), tag: snap(34.644), cta: snap(35.167), len: Math.round(M.src * 30) / 30 };
+    const T = { shrink: 179 / 30, flick1: snap(6.1), flick2: snap(7.4), cardIn: snap(8.967), cardLabel: snap(9.1), open: snap(9.9), opened: snap(10.15), end: snap(34.3), tag: snap(34.644), cta: snap(35.167), len: Math.round(M.src * 30) / 30 };
     const FULL = { vp: [432, 768], dpr: 2.5, mobile: true, cursor: 'touch' };
-    const SLOTS = [{ name: 'reel5-intro', from: 0, to: T.cardIn, video: M.file, srcFrom: 0 }];
-    stills.push({ name: 'r5-safari', video: M.file, at: 8.933, frames: 1 }, { name: 'r5-bg', video: M.file, at: 9.5, frames: 1 });
+    // the original Reel plays untouched to its last frame (178); from the swipe-up on, the app switcher is ours
+    const SLOTS = [{ name: 'reel5-intro', from: 0, to: T.shrink, video: M.file, srcFrom: 0 }];
+    stills.push({ name: 'r5-ig', video: M.file, at: 178 / 30, frames: 1 }, { name: 'r5-calc', video: M.file, at: 7.2, frames: 1 });
     const fstill = site => { const name = `stillf-${site}`; if (!stills.find(s => s.name === name)) stills.push({ name, url: siteURL(site, site === 'marea' ? '?dpr=2.5' : ''), ...FULL, cursor: null, frames: 1, preroll: site === 'marea' ? 7.8 : site === 'soda' ? 4.5 : 3.2 }); return name; };
 
     // the main section: cut points are the reference's own visual cuts
@@ -2243,15 +2272,43 @@ function initAd() {
     gsap.set(['#adHole'], { autoAlpha: 1 });
     SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
 
-    // ── the app switcher: Safari is flicked away, our site's card waits underneath ──
-    $('#r5bg').dataset.still = 'r5-bg'; $('#r5safari').dataset.still = 'r5-safari';
+    // ── the app switcher, rebuilt: the Reel shrinks to a card, flick to Calculator, flick to a search about websites,
+    //    slide past it to the MAREA card, tap, it opens. Positions/timing measured on the reference.
+    $('#r5bg').dataset.still = 'r5-calc'; $('#r5ig img').dataset.still = 'r5-ig'; $('#r5calc img').dataset.still = 'r5-calc';
     shotState.card = { name: 'a5-marea-open', f0: Math.round(T.opened * 30) - 1, off: 0 };
-    show('#r5', true, T.cardIn);
-    tl.set('#r5card', { left: 172, top: 135, width: 738, height: 1602, borderRadius: 74 }, T.cardIn);
-    tl.set('#r5lbl', { opacity: 0 }, T.cardIn);
-    tl.fromTo('#r5safari', { x: 0, y: 0, scale: 1 }, { x: 330, y: -1650, scale: .94, duration: .15, ease: 'power2.in', immediateRender: false }, T.cardIn);
-    tl.set('#r5safari', { autoAlpha: 0 }, T.cardIn + .17);
-    tl.to('#r5lbl', { opacity: 1, duration: .12 }, T.cardLabel);
+    const CARD = { top: 135, width: 738, height: 1602, borderRadius: 74 }, X = { right: 935, center: 172, left: 38, gone: -720, off: 1120 };
+    show('#r5', true, T.shrink);
+    tl.set('#r5ig', { left: 0, top: 0, width: 1080, height: 1920, borderRadius: 0, x: 0, scale: 1 }, T.shrink);
+    tl.set('#r5calc', { ...CARD, left: X.left, x: 0 }, T.shrink);
+    tl.set('#r5srch', { ...CARD, left: X.gone, x: 0 }, T.shrink);
+    tl.set('#r5card', { ...CARD, left: X.gone, x: 0 }, T.shrink);
+    tl.set(['#r5lbl', '#r5peek'], { opacity: 0 }, T.shrink);
+    // swipe up: the Reel shrinks into its card
+    tl.to('#r5ig', { ...CARD, left: X.center, duration: T.flick1 - T.shrink, ease: 'power2.out' }, T.shrink);
+    // flick 1: the Reel slides right, Calculator comes to the middle, the search card peeks in on the left
+    tl.to('#r5ig', { left: X.right, duration: .34, ease: 'power3.out' }, T.flick1)
+      .to('#r5calc', { left: X.center, duration: .34, ease: 'power3.out' }, T.flick1)
+      .to('#r5srch', { left: X.left, duration: .34, ease: 'power3.out' }, T.flick1);
+    const label = (at, icon, name, peek) => {
+      tl.call(() => { $('#r5lbl i').className = icon; $('#r5lbl span').textContent = name; $('#r5peek').className = peek; }, null, at);
+      tl.fromTo(['#r5lbl', '#r5peek'], { opacity: 0 }, { opacity: 1, duration: .12, immediateRender: false }, at);
+    };
+    label(T.flick1 + .3, 'ic-calc', 'Calculator', 'ic-safari');
+    // flick 2: Calculator slides right, the search comes to the middle, MAREA peeks in
+    tl.to(['#r5lbl', '#r5peek'], { opacity: 0, duration: .06 }, T.flick2);
+    tl.to('#r5ig', { left: X.off, duration: .3, ease: 'power3.out' }, T.flick2)
+      .to('#r5calc', { left: X.right, duration: .3, ease: 'power3.out' }, T.flick2)
+      .to('#r5srch', { left: X.center, duration: .3, ease: 'power3.out' }, T.flick2)
+      .to('#r5card', { left: X.left, duration: .3, ease: 'power3.out' }, T.flick2);
+    label(T.flick2 + .28, 'ic-safari', 'Safari', 'ic-marea');
+    // switcher cards are frozen snapshots, so the search page is shown complete
+    $('#r5q').textContent = 'how to get a website that actually moves';
+    // slide past it: the search card is flicked away, MAREA comes to the middle
+    tl.to(['#r5lbl', '#r5peek'], { opacity: 0, duration: .06 }, T.cardIn);
+    tl.to('#r5srch', { x: 330, y: -1650, scale: .94, duration: .15, ease: 'power2.in' }, T.cardIn)
+      .to('#r5calc', { left: X.off, duration: .2, ease: 'power3.out' }, T.cardIn)
+      .to('#r5card', { left: X.center, duration: .16, ease: 'power3.out' }, T.cardIn);
+    label(T.cardLabel, 'ic-marea', 'MAREA', '');
     // tap: the card opens to full screen
     tl.to('#r5card', { left: 0, top: 0, width: 1080, height: 1920, borderRadius: 0, duration: T.opened - T.open, ease: 'power2.inOut' }, T.open);
     tl.to('#r5lbl', { opacity: 0, y: -40, duration: .12 }, T.open);
