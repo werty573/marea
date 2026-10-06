@@ -261,6 +261,19 @@ body.ad #ad{display:block}
 #dmWord{font-family:var(--serif);font-style:italic;font-size:60px;letter-spacing:.4em;color:var(--pearl)}
 #glowB{z-index:5;background:radial-gradient(75% 42% at 50% 104%,rgba(127,243,255,.6),transparent 72%);mix-blend-mode:screen}
 #flash{z-index:13;background:#fff}
+#thumbL{z-index:3;background:#000}
+.th-txt{position:absolute;left:70px;top:150px;display:flex;flex-direction:column;align-items:flex-start;color:#fff;line-height:.9}
+.th-txt span{font:800 58px/1 Rubik,sans-serif;letter-spacing:.01em}
+.th-txt b{font:900 132px/1 Rubik,sans-serif;letter-spacing:.01em;margin:6px 0 6px 44px}
+.th-txt i{font:600 40px/1 'Inter Tight',sans-serif;font-style:normal;margin-left:150px}
+.th-svg{position:absolute;inset:0;width:1080px;height:1920px}
+.sw{z-index:3;overflow:hidden;background:#000;filter:url(#sblur)}
+.sw img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+#mbar{z-index:30;top:auto;bottom:0;height:170px;background:linear-gradient(rgba(245,245,247,.0),rgba(245,245,247,.0));display:flex;align-items:flex-start;justify-content:center;padding-top:22px}
+#mbar .pill{width:960px;height:96px;border-radius:30px;background:rgba(250,250,252,.86);backdrop-filter:blur(20px);box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;align-items:center;gap:20px;padding:0 34px;font:600 32px/1 'Inter Tight',sans-serif;color:#1c1c1e}
+#mbar .aa{font-size:30px;letter-spacing:-.02em}#mbar .u{flex:1;text-align:center;font-weight:500}#mbar .lock{font-size:22px}#mbar .rl{font-size:36px}
+#ftag{position:absolute;left:50%;bottom:210px;transform:translateX(-50%);display:inline-block;white-space:nowrap;padding:22px 34px;border-radius:999px;background:#0B1F3A;color:#fff;font:700 40px/1 'Inter Tight',sans-serif;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+#ftag::before{content:'';display:inline-block;width:14px;height:14px;border-radius:50%;background:#00B3A6;margin-right:16px;vertical-align:middle}
 #devBg{z-index:6;background:radial-gradient(90% 55% at 50% 42%,color-mix(in srgb,var(--acc,#7ff3ff) 24%,#0d0e12) 0%,#0b0c10 58%,#040406 100%)}
 #devStage{z-index:7;perspective:2400px}
 .dev{position:absolute;transform-style:preserve-3d}
@@ -1690,6 +1703,19 @@ function initAd() {
     <div class="ad-layer" id="wall"><div id="wallPlane"></div></div>
     <div class="ad-layer" id="descent2"><div class="code"><pre></pre><pre></pre><pre></pre></div>
       <div class="ld"><span>LOADING</span><div class="ldn"><b id="ldN">0</b>%</div><div class="bar"><i id="ldBar"></i></div></div></div>
+    <div class="ad-layer" id="thumbL">
+      <div class="th-txt"><span>MOVE YOUR</span><b>THUMB</b><i>to the beat</i></div>
+      <svg viewBox="0 0 1080 1920" class="th-svg" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <g id="th-up"><path d="M820 1920 C 790 1760 760 1600 742 1460 C 728 1350 690 1290 650 1230 C 612 1172 598 1090 626 1036 C 656 980 732 984 760 1046 C 786 1104 790 1196 822 1270 C 870 1380 930 1560 1000 1920"/><path d="M640 1092 C 640 1050 690 1034 722 1060 C 738 1100 714 1132 676 1128"/></g>
+        <g id="th-dn" style="display:none"><path d="M1080 1560 C 900 1530 760 1540 600 1522 C 500 1512 420 1492 410 1440 C 400 1392 456 1372 520 1378 C 700 1394 880 1384 1080 1350"/><path d="M462 1392 C 430 1400 424 1440 450 1458 C 488 1470 520 1452 516 1420"/></g>
+        <g id="th-bl" style="display:none;filter:url(#sblur)" opacity=".8"><path d="M960 1920 C 900 1720 820 1560 720 1420 C 640 1310 560 1250 530 1190 C 506 1140 540 1090 600 1110 C 660 1130 700 1220 760 1290 C 860 1400 960 1500 1080 1560" stroke-dasharray="40 18"/></g>
+      </svg>
+    </div>
+    <div class="ad-layer sw" id="swA"><img alt=""></div>
+    <div class="ad-layer sw" id="swB"><img alt=""></div>
+    <div class="ad-layer" id="mbar"><div class="pill"><span class="aa">AA</span><span class="lock">🔒</span><span class="u"></span><span class="rl">↻</span></div></div>
+    <div class="ad-layer" id="ftagL" style="z-index:31"><div id="ftag" style="display:none"></div></div>
+    <svg width="0" height="0" style="position:absolute"><filter id="sblur" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="0 0"/></filter></svg>
     <svg width="0" height="0" style="position:absolute"><filter id="hblur" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="0 0"/></filter></svg>
     <div class="ad-layer tpl" id="tpl">
       <div class="tpl-inner" id="tplInner">
@@ -1737,7 +1763,7 @@ function initAd() {
   }
   // every ad layer starts hidden; each builder shows what it uses
   gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep', '#adHole',
-            '#tpl', '#adBlack', '#sk', '#adWords', '#adBadge', '#glowB', '#descent', '#flash', '#devBg', '#chip', '#dPhone', '#dDesk', '#grid', '#wall', '#descent2'], { autoAlpha: 0 });
+            '#tpl', '#adBlack', '#sk', '#adWords', '#adBadge', '#glowB', '#descent', '#flash', '#devBg', '#chip', '#dPhone', '#dDesk', '#grid', '#wall', '#descent2', '#thumbL', '#swA', '#swB', '#mbar'], { autoAlpha: 0 });
   { const src = ($('script[type=module]').textContent || '').split('\n').filter(l => l.trim()); $$('#descent2 pre').forEach((p, i) => { p.textContent = src.slice(i * 140, i * 140 + 140).join('\n'); }); }
   gsap.set(['#pdMark', '#pdWord', '#pdTag', '#pdBy', '#pdCta'], { opacity: 0 });
 
@@ -1880,9 +1906,9 @@ function initAd() {
   const siteURL = (k, q = '') => SITES[k].live ? SITES[k].live + q : SITES[k].local + q;
   // helpers available inside recorded pages: __c(sel, n) = centre of nth match, __top(sel) = document y of its top
   const clips = [], stills = [];
-  const clip = (name, site, dev, frames, spec = {}) => { clips.push({ name, url: siteURL(site, spec.q || (site === 'marea' && dev === PHONE ? '?dpr=2' : '')), ...dev, frames, preroll: 3, ...spec }); return name; };
+  const clip = (name, site, dev, frames, spec = {}) => { clips.push({ name, url: siteURL(site, spec.q || (site === 'marea' && dev === PHONE ? '?dpr=2' : '')), ...dev, frames, preroll: 3, ...spec, q: undefined }); return name; };
   const still = (site, dev) => { const name = `still-${site}-${dev === PHONE ? 'p' : 'd'}`; if (!stills.find(s => s.name === name)) stills.push({ name, url: siteURL(site, site === 'marea' && dev === PHONE ? '?dpr=2' : ''), ...dev, frames: 1, preroll: site === 'marea' ? 7.8 : site === 'soda' ? 4.5 : 3.2, cursor: null }); return name; };
-  const shotState = { phone: null, desk: null };
+  const shotState = { phone: null, desk: null, swA: null, swB: null };
   // put a clip on a device from frame `at` on; `off` skips into the clip
   function onDevice(dev, name, at, site, chip, feature, opts = {}) {
     tl.call(() => {
@@ -1904,8 +1930,8 @@ function initAd() {
   // frame-exact image swapping for device screens
   async function paintDevices(i) {
     const jobs = [];
-    for (const dev of ['phone', 'desk']) {
-      const st = shotState[dev], img = $(dev === 'phone' ? '#dPhone img' : '#dDesk img');
+    for (const dev of ['phone', 'desk', 'swA', 'swB']) {
+      const st = shotState[dev], img = $({ phone: '#dPhone img', desk: '#dDesk img', swA: '#swA img', swB: '#swB img' }[dev]);
       if (!st) continue;
       const c = clips.find(c => c.name === st.name);
       const k = Math.max(0, Math.min(c.frames - 1, i - st.f0 + st.off));
@@ -2065,7 +2091,99 @@ function initAd() {
     return { T, M, SLOTS };
   }
 
-  const { T, M, SLOTS } = [null, buildAd1, buildAd2, buildAd3][AD_N]();
+
+  /* ───────────────────────── ad 4 · "move your thumb to the beat" (reference reel 4) ───────────────────────── */
+  function buildAd4() {
+    // reel 4 is 10.91 s; its 8-beat phrase [p1, p2) after the intro plays twice (seams just before onsets)
+    const M = { file: 'reference/reel4/reel.mp4', p1: 4.2057, p2: 7.8077, src: 10.912 };
+    const L = M.p2 - M.p1;
+    M.segs = [[0, M.p2], [M.p1, M.p2], [M.p2, M.src]];
+    const sh = t => (t >= M.p2 - .01 ? t + L : t);
+    // swipe landings: the reference's swipe times (3.6, 4.6, 5.7, 6.17, 6.77, 7.3 | 7.83, 8.83, 9.4), each snapped to the
+    // nearest strong hit in the music so every swipe lands on a beat; the repeated phrase repeats them
+    const ref = [3.75, 4.656, 5.561, 6.223, 6.687, 7.361];
+    const lands = [...ref, ...ref.slice(1).map(t => t + L), sh(7.825), sh(8.719), sh(9.497)].map(snap);
+    const T = { end: snap(sh(9.834)), tag: snap(sh(10.077)), cta: snap(sh(10.298)), len: Math.round((M.src + L) * 30) / 30 };
+    const FULL = { vp: [432, 768], dpr: 2.5, mobile: true, cursor: 'touch' };
+    // [site, feature (null = just the page), clip spec]
+    const SHOTS = [
+      ['marea', null, { preroll: 8.2 }],
+      ['soda', null, { preroll: 4.6 }],
+      ['tamarind', null, {}],
+      ['gloss', null, {}],
+      ['pulse', null, {}],
+      ['leeward', 'Live booking calendar', { prescroll: "__top('.cal') - 90", actions: [
+        { mouse: [[0, 216, 600], [3, "__c('.grid .day:not([disabled])', 4)"], [11, "__c('.grid .day:not([disabled])', 4)"], [14, "__c('.grid .day.edge ~ .day:not([disabled])', 1)"], [22, "__c('.grid .day.edge ~ .day:not([disabled])', 1)"], [30, 216, 640]] },
+        { click: 4 }, { click: 15 }, { scroll: [[17, "__top('.cal') - 90"], [27, "__top('.cal') + 230"]] }] }],
+      ['marea', 'Tap to restyle the site', { preroll: 8.2, actions: [
+        { mouse: [[0, 300, 560], [3, "__c('.scent-btn',2)"], [34, "__c('.scent-btn',2)"]] }, { click: 4 }] }],
+      ['gilded', null, {}],
+      ['gloss', 'Before / after reveal', { prescroll: "__top('.ba') + 4", actions: [{ scroll: [[0, "__top('.ba') + 4"], [16, "__top('.ba') + innerHeight * 1.15"]] }] }],
+      ['pulse', 'Class timetable', { prescroll: "__top('.days') - 220", actions: [
+        { mouse: [[0, "__c('.days button',0)"], [3, "__c('.days button',2)"], [9, "__c('.days button',2)"], [11, "__c('.days button',4)"], [20, "__c('.days button',4)"]] }, { click: 4 }, { click: 12 }] }],
+      ['soda', 'Product configurator', { preroll: 4.6, actions: [{ js: [1, 'window.__soda.setFlavor(1)'] }] }],
+      ['tamarind', 'Reservations, no app', { prescroll: "__top('.reserve .form') - 70", actions: [
+        { mouse: [[0, 300, 500], [3, "__c('[data-step=\"1\"]')"], [30, "__c('[data-step=\"1\"]')"]] }, { click: 4 }, { click: 11 }, { click: 18 }] }],
+      ['marea', 'Scroll-driven story', { preroll: 8.2, lenis: true, actions: [{ scroll: [[0, 0], [16, "__top('#manifesto') + innerHeight * .5"]] }] }],
+      ['leeward', null, {}],
+    ];
+    applyScentInstant(0);
+    gsap.set(['#thumbL'], { autoAlpha: 1 });
+    Object.assign(stage, { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1, cx: 0, cy: 0, lx: 0, ly: 0 });
+
+    // ── intro: the hook text, and a line-drawn thumb flicking on the hits ──
+    const flips = [[0, 'dn'], [.139, 'up'], [.604, 'dn'], [1.057, 'up'], [1.509, 'bl'], [1.62, 'dn'], [1.962, 'up'], [2.415, 'dn'], [2.868, 'up'], [3.18, 'bl'], [3.274, 'dn'], [3.5, 'up']];
+    flips.forEach(([t, pose]) => {
+      tl.call(() => { ['up', 'dn', 'bl'].forEach(p => $('#th-' + p).style.display = p === pose ? '' : 'none'); }, null, t);
+      if (pose === 'dn') tl.fromTo('#th-dn', { scale: .94, transformOrigin: '100% 60%' }, { scale: 1, duration: .16, ease: 'power2.out', immediateRender: false }, t);
+    });
+
+    // ── swipe through the sites, one per landing ──
+    const wb = { b: 0 };
+    const blur = () => $('#sblur feGaussianBlur').setAttribute('stdDeviation', `${wb.b} 0`);
+    let prev = '#thumbL', slot = 'swB';
+    SHOTS.forEach(([site, feature, spec], i) => {
+      const land = lands[i], next = i + 1 < SHOTS.length ? lands[i + 1] : T.end;
+      const tin = land - .133;
+      const name = `a4-${String(i + 1).padStart(2, '0')}-${site}`;
+      clip(name, site, FULL, Math.round((next - tin) * 30) + 3, { q: site === 'marea' ? '?dpr=2.5' : '', ...spec });
+      slot = slot === 'swA' ? 'swB' : 'swA';
+      const el = '#' + slot, s = slot, out = prev;
+      tl.call(() => {
+        shotState[s] = { name, f0: Math.round(tin * 30), off: 0 };
+      }, null, tin);
+      tl.set(el, { autoAlpha: 1, x: 1080, scale: 1, zIndex: 3 }, tin);
+      tl.set(out, { zIndex: 2 }, tin);
+      tl.to(el, { x: 0, duration: .133, ease: 'power2.out' }, tin);
+      tl.to(out, { x: -620, duration: .133, ease: 'power2.in' }, tin);
+      tl.fromTo(wb, { b: 0 }, { b: 34, duration: .066, ease: 'power1.in', onUpdate: blur, immediateRender: false }, tin)
+        .to(wb, { b: 0, duration: .067, ease: 'power1.out', onUpdate: blur }, tin + .066);
+      tl.set(out, { autoAlpha: 0, x: 0 }, land);
+      tl.to(el, { scale: 1.035, duration: next - land, ease: 'none' }, land);      // a slow push like the reference's camera drift
+      // mobile browser bar + feature tag
+      tl.call(() => {
+        $('#mbar .u').textContent = SITES[site].url.replace('werty573.github.io', 'werty573.github.io');
+        $('#ftag').textContent = feature || '';
+        $('#ftag').style.display = feature ? '' : 'none';
+      }, null, land - .06);
+      if (i === 0) show('#mbar', true, land - .06);
+      if (feature) tl.fromTo('#ftag', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: .2, ease: 'silk', immediateRender: false }, land);
+      prev = el;
+    });
+    // the last site swipes away into the Portside card
+    tl.set('#end', { autoAlpha: 1, x: 1080, zIndex: 20 }, T.end - .133);
+    tl.to('#end', { x: 0, duration: .133, ease: 'power2.out' }, T.end - .133);
+    tl.to(prev, { x: -620, duration: .133, ease: 'power2.in' }, T.end - .133);
+    show(['#mbar', '#ftag'], false, T.end);
+    tl.set(['#pdMark', '#pdWord'], { opacity: 1 }, T.end);
+    tl.fromTo('#pdTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .3, ease: 'silk', immediateRender: false }, T.tag)
+      .fromTo('#pdBy', { opacity: 0 }, { opacity: 1, duration: .3, immediateRender: false }, T.tag)
+      .fromTo('#pdCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .35, ease: 'surge', immediateRender: false }, T.cta)
+      .fromTo('#pdMark', { scale: 1.12 }, { scale: 1, duration: .3, ease: 'power2.out', immediateRender: false }, T.cta);
+    return { T, M, SLOTS: [] };
+  }
+
+  const { T, M, SLOTS } = [null, buildAd1, buildAd2, buildAd3, buildAd4][AD_N]();
   tl.set({}, {}, T.len);
 
   let frameNo = 0;

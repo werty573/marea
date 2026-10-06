@@ -1,5 +1,5 @@
 // Records a Reel and exports it:
-//   node ad/record.mjs [1|2|3]          → ad 1: ad/ad.mp4 · ad 2: ad/ad2.mp4 · ad 3: ad/ad3.mp4 (+ -silent versions)
+//   node ad/record.mjs [1|2|3|4]        → ad 1: ad/ad.mp4 · ad N: ad/adN.mp4 (+ -silent versions)
 //   node ad/record.mjs 2 --frames       → frames only (ad/frames/ad2/final), no encode
 //   node ad/record.mjs 2 --reuse        → keep already-recorded site clips
 //
@@ -17,7 +17,7 @@ import path from 'node:path';
 import { server } from '../scripts/serve.mjs';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1')), '..');
-const N = +(process.argv.find(a => /^[123]$/.test(a)) || 1), sfx = N === 1 ? '' : String(N);
+const N = +(process.argv.find(a => /^[1-9]$/.test(a)) || 1), sfx = N === 1 ? '' : String(N);
 const adDir = path.join(root, 'ad'), FR = path.join(adDir, 'frames', 'ad' + N);
 const BASE = 'http://localhost:5173';
 const onlyFrames = process.argv.includes('--frames'), reuse = process.argv.includes('--reuse');
