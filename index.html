@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MAREA — Bottled from the deep</title>
+<meta name="description" content="MAREA is a Caribbean niche fragrance house. Small-batch perfumes found twelve hundred metres down. A concept build by Portside Digital.">
+<meta name="theme-color" content="#05040c">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/CustomEase.min.js"></script>
+<script src="https://unpkg.com/lenis@1.3.4/dist/lenis.min.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<style>
+:root{
+  --ink:#05040c;
+  --pearl:#ede8e1;
+  --pearl-dim:rgba(237,232,225,.62);
+  --line:rgba(237,232,225,.16);
+  --accent:#b9a6ff;
+  --glow:#7ff3ff;
+  --serif:'Bodoni Moda', 'Didot', serif;
+  --sans:'Inter Tight', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+  --pad:clamp(16px, 3.2vw, 48px);
+  --ease-silk:cubic-bezier(.19,1,.22,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--ink);-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+body{background:var(--ink);color:var(--pearl);font-family:var(--sans);font-size:16px;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body.is-loading{overflow:hidden;height:100svh}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+em{font-style:italic}
+::selection{background:var(--accent);color:var(--ink)}
+
+/* ---------- WebGL layers ---------- */
+#bg,#fx{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+#bg{z-index:0}
+#fx{z-index:2;transition:opacity .6s var(--ease-silk)}
+
+/* ---------- finishing overlays ---------- */
+.grain{position:fixed;inset:-50%;width:200%;height:200%;z-index:90;pointer-events:none;opacity:.075;mix-blend-mode:overlay;background-size:180px 180px;animation:grain 1s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}17%{transform:translate(-6%,4%)}33%{transform:translate(4%,-7%)}50%{transform:translate(-9%,-3%)}67%{transform:translate(7%,8%)}83%{transform:translate(-3%,9%)}100%{transform:translate(0,0)}}
+.vignette{position:fixed;inset:0;z-index:89;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.55) 100%)}
+
+/* ---------- cursor ---------- */
+.cursor{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:none}
+.has-cursor .cursor{display:block}
+.has-cursor, .has-cursor a, .has-cursor button{cursor:none}
+.c-dot{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--pearl)}
+.c-ring{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:1px solid rgba(237,232,225,.55);display:grid;place-items:center;transition:width .5s var(--ease-silk),height .5s var(--ease-silk),margin .5s var(--ease-silk),background .4s,border-color .4s}
+.c-ring.is-big{width:96px;height:96px;margin:-48px 0 0 -48px;background:var(--pearl);border-color:var(--pearl)}
+.c-label{font:500 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);opacity:0;transition:opacity .3s}
+.c-ring.is-big .c-label{opacity:1}
+
+/* ---------- preloader ---------- */
+.preloader{position:fixed;inset:0;z-index:150;background:var(--ink);display:grid;place-items:center;--r:0px;
+  -webkit-mask:radial-gradient(circle at 50% 50%,transparent var(--r),#000 calc(var(--r) + 1px));
+          mask:radial-gradient(circle at 50% 50%,transparent var(--r),#000 calc(var(--r) + 1px))}
+.pl-center{display:flex;flex-direction:column;align-items:center;gap:22px}
+.pl-word{font-family:var(--serif);font-size:clamp(44px,7vw,96px);letter-spacing:.32em;padding-left:.32em;line-height:1}
+.pl-meta{display:flex;gap:18px;font:400 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--pearl-dim)}
+.pl-count{color:var(--pearl);min-width:3ch}
+.pl-bar{width:min(240px,50vw);height:1px;background:var(--line);overflow:hidden}
+.pl-bar i{display:block;height:100%;background:var(--pearl);transform-origin:0 50%;transform:scaleX(0)}
+
+/* ---------- nav ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;padding:calc(var(--pad)*.6) var(--pad);transition:transform .8s var(--ease-silk)}
+.nav.is-hidden{transform:translateY(-120%)}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--serif);font-size:20px;letter-spacing:.34em}
+.brand-mark{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 8%,var(--glow) 30%,var(--accent) 62%,transparent 64%),conic-gradient(from 90deg,var(--glow),var(--accent),var(--glow));box-shadow:0 0 18px var(--glow);transition:box-shadow .8s}
+.links{display:flex;gap:4px;padding:5px;border-radius:999px;background:rgba(237,232,225,.05);border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.links a{position:relative;padding:9px 18px;border-radius:999px;font-size:13px;font-weight:500;letter-spacing:.02em;color:var(--pearl-dim);overflow:hidden;transition:color .4s}
+.links a::before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--pearl);transform:translateY(102%);transition:transform .55s var(--ease-silk);z-index:-1}
+.links a:hover{color:var(--ink)}
+.links a:hover::before{transform:none}
+.btn-pill{position:relative;display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:var(--pearl);color:var(--ink);font-size:13px;font-weight:600;letter-spacing:.04em;will-change:transform}
+.btn-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--ink)}
+
+/* ---------- shared type ---------- */
+.eyebrow{font:400 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--pearl-dim)}
+.h2{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6.4vw,104px);line-height:.95;letter-spacing:-.02em}
+.h2 em,.hero-tag em,.note-title em,.reserve-title em{font-style:italic;color:var(--accent);transition:color 1s}
+section{position:relative;z-index:1}
+
+/* ---------- hero ---------- */
+.hero{height:100svh;min-height:600px;position:relative;overflow:hidden}
+.hero-kicker{position:absolute;top:calc(var(--pad)*2.6);left:var(--pad);right:var(--pad);display:flex;justify-content:space-between}
+.hero-title{position:absolute;left:0;right:0;top:50%;transform:translateY(-58%);text-align:center;font-family:var(--serif);font-weight:400;font-size:clamp(96px,26vw,520px);line-height:.8;letter-spacing:-.045em;color:var(--pearl);white-space:nowrap;user-select:none}
+.hero-title .char{display:inline-block;will-change:transform}
+.sweep{position:absolute;inset:0;pointer-events:none;overflow:hidden;mix-blend-mode:overlay}
+.sweep::after{content:"";position:absolute;top:-20%;bottom:-20%;width:22%;left:-30%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);transform:skewX(-14deg);animation:sweep 7s 4s var(--ease-silk) infinite}
+@keyframes sweep{0%{left:-30%}35%,100%{left:120%}}
+.hero-bottom{position:absolute;left:var(--pad);right:var(--pad);bottom:var(--pad);display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:24px}
+.hero-tag{font-family:var(--serif);font-size:clamp(26px,2.6vw,42px);line-height:1.05;max-width:12ch}
+.hero-sub{margin-top:14px;max-width:34ch;color:var(--pearl-dim);font-size:14px}
+.scroll-cue{display:flex;flex-direction:column;align-items:center;gap:10px;font:400 10px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--pearl-dim)}
+.scroll-cue i{width:1px;height:46px;background:linear-gradient(var(--pearl),transparent);transform-origin:top;animation:cue 2.4s var(--ease-silk) infinite}
+@keyframes cue{0%{transform:scaleY(0)}50%{transform:scaleY(1);transform-origin:top}50.1%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.scent-ui{justify-self:end;display:flex;flex-direction:column;align-items:flex-end;gap:14px;text-align:right}
+.sn-name{font-family:var(--serif);font-size:clamp(24px,2.2vw,34px);line-height:1;overflow:hidden;padding-bottom:4px}
+.sn-name .char{display:inline-block}
+.sn-notes{font-size:13px;color:var(--pearl-dim);min-height:1.5em}
+.scents{display:flex;gap:6px;padding:5px;border-radius:999px;border:1px solid var(--line);background:rgba(237,232,225,.04);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.scent-btn{position:relative;display:flex;align-items:center;gap:8px;padding:9px 14px 9px 10px;border-radius:999px;font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--pearl-dim);transition:color .4s,background .5s var(--ease-silk)}
+.scent-btn .sw{width:14px;height:14px;border-radius:50%}
+.scent-btn.is-active{background:rgba(237,232,225,.12);color:var(--pearl)}
+
+/* ---------- depth meter ---------- */
+.depth{position:fixed;right:var(--pad);top:50%;z-index:50;transform:translateY(-50%);display:flex;flex-direction:column;align-items:flex-end;gap:10px;font:400 10px/1 var(--mono);letter-spacing:.18em;color:var(--pearl-dim);pointer-events:none}
+.depth-n{font-size:12px;color:var(--pearl)}
+.depth-scale{width:1px;height:120px;background:var(--line);position:relative}
+.depth-scale i{position:absolute;left:-3px;top:0;width:7px;height:1px;background:var(--pearl)}
+
+/* ---------- manifesto ---------- */
+.manifesto{min-height:100svh;display:flex;align-items:center;padding:12vh var(--pad)}
+.manifesto .wrap{max-width:min(1100px,62vw)}
+.big-copy{margin-top:34px;font-family:var(--serif);font-size:clamp(30px,4.1vw,68px);line-height:1.08;letter-spacing:-.015em}
+.big-copy .word{opacity:.14}
+
+/* ---------- notes ---------- */
+.notes{height:100svh;overflow:hidden}
+.notes-inner{position:absolute;inset:0;padding:calc(var(--pad)*2.6) var(--pad) var(--pad)}
+.notes-head{display:flex;justify-content:space-between}
+.note{position:absolute;right:var(--pad);top:50%;transform:translateY(-50%);width:min(560px,44vw);visibility:hidden}
+.note-num{display:block;font:400 12px/1 var(--mono);letter-spacing:.2em;color:var(--accent);transition:color 1s}
+.note-title{margin:18px 0 22px;font-family:var(--serif);font-weight:400;font-size:clamp(48px,6vw,104px);line-height:.92;letter-spacing:-.02em}
+.note p{font-size:17px;line-height:1.55;color:var(--pearl-dim);max-width:40ch}
+.note-tier{display:inline-block;margin-top:26px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;font:400 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.notes-progress{position:absolute;left:var(--pad);bottom:var(--pad);display:flex;gap:10px}
+.notes-progress span{width:56px;height:2px;background:var(--line);overflow:hidden}
+.notes-progress i{display:block;height:100%;background:var(--pearl);transform-origin:0 50%;transform:scaleX(0)}
+.notes-big{position:absolute;left:var(--pad);bottom:calc(var(--pad) + 30px);font-family:var(--serif);font-size:clamp(120px,22vw,360px);line-height:.8;color:transparent;-webkit-text-stroke:1px rgba(237,232,225,.22);user-select:none}
+
+/* ---------- collection (horizontal) ---------- */
+.collection{height:100svh;overflow:hidden}
+.h-track{position:absolute;top:0;left:0;height:100%;display:flex;align-items:center;gap:clamp(20px,3vw,48px);padding:0 var(--pad);will-change:transform}
+.h-intro{flex:0 0 min(520px,80vw);padding-right:4vw}
+.h-intro p:last-child{margin-top:26px;color:var(--pearl-dim);max-width:36ch}
+.card{--c1:#7ff3ff;--c2:#7a4dff;flex:0 0 clamp(300px,30vw,460px);height:min(72svh,640px);position:relative;border-radius:28px;padding:26px;display:flex;flex-direction:column;border:1px solid var(--line);background:linear-gradient(160deg,rgba(237,232,225,.07),rgba(237,232,225,.015));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transform-style:preserve-3d;will-change:transform;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(60% 50% at var(--mx,50%) var(--my,30%),rgba(255,255,255,.12),transparent 70%);opacity:0;transition:opacity .5s}
+.card:hover::before{opacity:1}
+.card-meta{display:flex;justify-content:space-between;font:400 11px/1 var(--mono);letter-spacing:.16em;color:var(--pearl-dim)}
+.orb{position:relative;flex:1;display:grid;place-items:center;transform:translateZ(40px)}
+.orb i{position:absolute;border-radius:50%}
+.orb i:nth-child(1){width:62%;aspect-ratio:1;background:radial-gradient(circle at 34% 28%,#fff 0 4%,var(--c1) 26%,var(--c2) 68%,#000 100%);box-shadow:0 0 80px -10px var(--c1),inset -20px -30px 60px rgba(0,0,0,.55);animation:orbFloat 7s ease-in-out infinite}
+.orb i:nth-child(2){width:78%;aspect-ratio:1;background:conic-gradient(from 0deg,transparent,var(--c1),transparent 30%,var(--c2),transparent 70%);-webkit-mask:radial-gradient(circle,transparent 63%,#000 64%,#000 65%,transparent 66%);mask:radial-gradient(circle,transparent 63%,#000 64%,#000 65%,transparent 66%);animation:spin 14s linear infinite;opacity:.8}
+.orb i:nth-child(3){width:20%;aspect-ratio:1;right:16%;top:18%;background:radial-gradient(circle at 35% 30%,#fff,#ddd6cf 40%,#8e8780 100%);box-shadow:0 10px 30px rgba(0,0,0,.4);animation:orbFloat 5s -2s ease-in-out infinite}
+@keyframes orbFloat{0%,100%{transform:translateY(-6px)}50%{transform:translateY(8px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.card h3{font-family:var(--serif);font-weight:400;font-size:clamp(34px,3vw,48px);line-height:1;transform:translateZ(30px)}
+.card p{margin-top:8px;font-size:14px;color:var(--pearl-dim);transform:translateZ(20px)}
+.card-cta{margin-top:22px;align-self:flex-start;display:inline-flex;gap:10px;align-items:center;padding:12px 18px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;transform:translateZ(30px);transition:background .4s,color .4s,border-color .4s}
+.card-cta:hover{background:var(--pearl);color:var(--ink);border-color:var(--pearl)}
+
+/* ---------- dive (zoom-through) ---------- */
+.dive{height:100svh}
+.dive-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.dive-kicker{position:absolute;left:0;right:0;top:calc(50% - clamp(120px,15vw,230px));text-align:center}
+
+/* ---------- ritual ---------- */
+.ritual{padding:20vh var(--pad) 18vh;overflow:hidden}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,4vw,64px);border-top:1px solid var(--line);padding-top:40px}
+.stat-n{font-family:var(--serif);font-size:clamp(64px,8vw,140px);line-height:.9;letter-spacing:-.03em}
+.stat-u{font-family:var(--serif);font-style:italic;font-size:clamp(28px,3vw,52px);color:var(--accent);margin-left:6px;transition:color 1s}
+.stat p{margin-top:18px;max-width:28ch;color:var(--pearl-dim)}
+.marquee{margin-top:16vh;display:flex;flex-direction:column;gap:2vh}
+.mq-row{white-space:nowrap;font-family:var(--serif);font-size:clamp(70px,12vw,210px);line-height:.95;letter-spacing:-.03em;will-change:transform}
+.mq-row.outline{color:transparent;-webkit-text-stroke:1px rgba(237,232,225,.35)}
+.mq-row em{color:var(--accent);transition:color 1s}
+
+/* ---------- reserve ---------- */
+.reserve{min-height:100svh;display:flex;flex-direction:column;justify-content:space-between;padding:calc(var(--pad)*3) var(--pad) var(--pad)}
+.reserve-grid{display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:40px}
+.reserve-title{font-family:var(--serif);font-weight:400;font-size:clamp(64px,10vw,180px);line-height:.88;letter-spacing:-.03em;margin-top:22px}
+.reserve-side{justify-self:end;display:flex;flex-direction:column;align-items:flex-end;gap:22px;text-align:right}
+.reserve-side p{max-width:34ch;color:var(--pearl-dim)}
+.btn-big{position:relative;width:clamp(150px,13vw,200px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:var(--pearl);color:var(--ink);font-weight:600;font-size:15px;text-align:center;line-height:1.2;will-change:transform}
+.btn-big span{display:block;will-change:transform}
+.concept{font-size:13px;color:var(--pearl-dim)}
+.concept a{color:var(--pearl);border-bottom:1px solid var(--line);transition:border-color .3s}
+.concept a:hover{border-color:var(--pearl)}
+.foot{display:flex;justify-content:space-between;gap:20px;padding-top:24px;border-top:1px solid var(--line);font:400 11px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pearl-dim)}
+
+/* masks used by SplitText */
+.line-mask{overflow:hidden;padding-bottom:.06em;margin-bottom:-.06em}
+
+/* ---------- responsive ---------- */
+@media (max-width:760px){
+  .links{display:none}
+  .btn-pill{padding:11px 16px}
+  .hero-kicker{top:86px;font-size:10px}
+  .hero-kicker span:last-child{display:none}
+  .hero-title{top:30%;font-size:31vw}
+  .hero-bottom{grid-template-columns:1fr;gap:18px}
+  .scroll-cue{display:none}
+  .scent-ui{justify-self:stretch;align-items:flex-start;text-align:left}
+  .hero-sub{display:none}
+  .depth{display:none}
+  .manifesto .wrap{max-width:100%}
+  .note{left:var(--pad);right:var(--pad);width:auto;top:auto;bottom:calc(var(--pad) + 40px);transform:none}
+  .note-title{font-size:13vw}
+  .note p{font-size:15px}
+  .notes-big{display:none}
+  .card{flex-basis:78vw;height:66svh}
+  .stats{grid-template-columns:1fr;gap:44px}
+  .reserve-grid{grid-template-columns:1fr}
+  .reserve-side{justify-self:start;align-items:flex-start;text-align:left}
+  .foot{flex-direction:column;gap:8px}
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  .grain,.sweep::after,.scroll-cue i,.orb i{animation:none!important}
+}
+
+/* ---------- ad mode (index.html?ad=1) ---------- */
+#ad{display:none}
+body.ad{width:1080px;height:1920px;overflow:hidden}
+body.ad .nav,body.ad main,body.ad .depth,body.ad .cursor,body.ad .preloader{display:none!important}
+body.ad .grain{animation:none}
+body.ad #ad{display:block}
+.ad-layer{position:fixed;inset:0;width:1080px;height:1920px;pointer-events:none}
+.ad-title{z-index:1;display:flex;justify-content:center;padding-top:470px;font-family:var(--serif);font-size:300px;line-height:.8;letter-spacing:-.045em;color:var(--pearl)}
+.ad-title .ch{display:inline-block;overflow:hidden;padding-bottom:.05em}
+.ad-title .ch b{display:inline-block;font-weight:400}
+.ad-top{z-index:5}
+.ad-bar{position:absolute;left:0;right:0;height:288px;background:#000}
+.ad-bar.t{top:0}.ad-bar.b{bottom:0}
+.ad-caption{position:absolute;left:0;right:0;top:1150px;text-align:center;font:700 66px/1.1 var(--sans);letter-spacing:-.01em;color:#fff;text-shadow:0 3px 14px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.6)}
+.ad-cursor{position:absolute;left:0;top:0;width:0;height:0}
+.ad-cursor .r{position:absolute;width:84px;height:84px;margin:-42px;border-radius:50%;border:2px solid rgba(255,255,255,.85)}
+.ad-cursor .d{position:absolute;width:14px;height:14px;margin:-7px;border-radius:50%;background:#fff}
+.ad-ui{position:absolute;left:64px;right:64px;bottom:120px;display:flex;justify-content:space-between;align-items:flex-end}
+.ad-ui .n{font:500 26px/1 var(--mono);letter-spacing:.14em;color:var(--pearl-dim)}
+.ad-ui .t{font-family:var(--serif);font-size:64px;line-height:1}
+.ad-cap-layer{z-index:8}
+.ad-nav{position:absolute;top:64px;left:56px;right:56px;display:flex;justify-content:space-between;align-items:center}
+.ad-nav .b{display:flex;align-items:center;gap:20px;font-family:var(--serif);font-size:40px;letter-spacing:.34em}
+.ad-nav .b i{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 8%,var(--glow) 30%,var(--accent) 62%,transparent 64%);box-shadow:0 0 26px var(--glow)}
+.ad-nav .p{padding:22px 36px;border-radius:999px;background:var(--pearl);color:var(--ink);font:600 26px/1 var(--sans)}
+.ad-note{position:absolute;left:64px;right:64px;top:250px}
+.ad-note .k{font:500 26px/1 var(--mono);letter-spacing:.2em;color:var(--accent);text-transform:uppercase}
+.ad-note .h{margin-top:30px;font-family:var(--serif);font-size:150px;line-height:.92;letter-spacing:-.02em}
+.ad-note .h span{display:block;overflow:hidden;padding-bottom:.08em}
+.ad-note .h b{display:block;font-weight:400}
+.ad-note .h em{color:var(--accent)}
+.ad-cards{z-index:6;background:linear-gradient(rgba(5,4,12,.15),rgba(5,4,12,.35))}
+.ad-cards .eb{position:absolute;left:64px;top:200px;font:500 26px/1 var(--mono);letter-spacing:.2em;color:var(--pearl-dim)}
+.ad-cards .hh{position:absolute;left:64px;top:240px;font-family:var(--serif);font-size:88px;white-space:nowrap;line-height:.95;letter-spacing:-.02em}
+.ad-cards .hh em{color:var(--accent)}
+.ad-track{position:absolute;top:390px;left:0;display:flex;gap:44px;padding-left:64px}
+.ad-track .card{flex:0 0 600px;height:700px;padding:44px;border-radius:44px}
+.ad-track .card-meta{font-size:22px}
+.ad-track .card h3{font-size:92px}
+.ad-track .card p{font-size:30px;margin-top:14px}
+.ad-track .card-cta{font-size:28px;padding:22px 34px;margin-top:34px}
+.ad-deep{z-index:6}
+.ad-deep svg{position:absolute;inset:0;width:1080px;height:1920px}
+.ad-deep .k{position:absolute;left:0;right:0;top:700px;text-align:center;font:500 28px/1 var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--pearl-dim)}
+/* template ("before") shot */
+.tpl{z-index:6;background:#e9e9e6;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#333;filter:saturate(.75) contrast(.92) brightness(1.03)}
+.tpl-inner{position:absolute;inset:-40px;transform-origin:50% 50%}
+.tpl-head{height:150px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 70px;border-bottom:2px solid #ddd;font-size:44px;font-weight:700;letter-spacing:.06em;color:#444}
+.tpl-burger{width:60px;height:40px;background:linear-gradient(#777 0 6px,transparent 6px 17px,#777 17px 23px,transparent 23px 34px,#777 34px 40px)}
+.tpl-scroll{position:absolute;left:0;right:0;top:150px}
+.tpl-hero{margin:50px 70px 0;height:620px;background:#cfcfcb;display:grid;place-items:center;color:#999;font-size:40px}
+.tpl-hero svg{width:160px;height:160px}
+.tpl h1{margin:56px 70px 0;font-family:'Times New Roman',serif;font-size:80px;font-weight:400;color:#222}
+.tpl p{margin:22px 70px 0;font-size:34px;line-height:1.5;color:#777}
+.tpl-btn{display:inline-block;margin:40px 70px 0;padding:26px 50px;background:#3b78e7;color:#fff;font-size:34px;border-radius:4px}
+.tpl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:36px;margin:70px 70px 0}
+.tpl-grid div{height:420px;background:#d6d6d2;display:flex;align-items:flex-end;padding:22px;font-size:30px;color:#666}
+.dm{position:absolute;left:108px;width:864px;top:684px;background:#000;border-radius:6px;padding:34px 30px 30px;font-family:-apple-system,'SF Pro Text','Inter Tight',Arial,sans-serif;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.dm-row{display:flex}
+.dm-row.me{justify-content:flex-end}
+.dm-b{max-width:74%;padding:16px 24px;border-radius:30px;font-size:29px;line-height:1.28;color:#fff;background:#262629}
+.dm-row.me .dm-b{background:#1e8bff}
+.dm-read{text-align:right;margin:8px 6px 24px;font-size:20px;color:#8e8e93}
+.dm-read b{color:#c7c7cc;font-weight:600}
+.dm-row + .dm-row{margin-top:12px}
+/* end card */
+.endcard{z-index:7;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(80% 60% at 50% 42%,rgba(5,4,12,.82),rgba(5,4,12,.97))}
+.ec-mark{width:120px;height:120px;border-radius:50%;margin-bottom:60px;background:radial-gradient(circle at 35% 30%,#fff 0 7%,var(--glow) 30%,var(--accent) 62%,#05040c 100%);box-shadow:0 0 90px var(--glow)}
+.ec-word{display:flex;font-family:var(--serif);font-size:210px;line-height:.85;letter-spacing:.06em}
+.ec-word .ch{display:inline-block;overflow:hidden;padding-bottom:.06em}
+.ec-word .ch b{display:inline-block;font-weight:400}
+.ec-tag{margin-top:34px;font-family:var(--serif);font-style:italic;font-size:64px;color:var(--pearl)}
+.ec-by{margin-top:120px;font:500 30px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--pearl-dim)}
+.ec-cta{margin-top:34px;display:inline-flex;align-items:center;gap:22px;padding:30px 52px;border-radius:999px;background:#25d366;color:#04160b;font:700 46px/1 var(--sans)}
+.ec-cta svg{width:52px;height:52px}
+</style>
+</head>
+<body class="is-loading">
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<canvas id="fx" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="cursor" aria-hidden="true"><div class="c-ring"><span class="c-label"></span></div><div class="c-dot"></div></div>
+
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="pl-center">
+    <div class="pl-word">MAREA</div>
+    <div class="pl-meta"><span class="pl-count">000</span><span>Descending</span></div>
+    <div class="pl-bar"><i></i></div>
+  </div>
+</div>
+
+<header class="nav" id="nav">
+  <a class="brand" href="#top" data-magnetic="0.25"><span class="brand-mark"></span>MAREA</a>
+  <nav class="links" aria-label="Primary">
+    <a href="#manifesto">Story</a><a href="#notes">Notes</a><a href="#collection">Collection</a><a href="#ritual">Ritual</a>
+  </nav>
+  <a class="btn-pill" href="#reserve" data-magnetic="0.35" data-cursor="Reserve"><span class="dot"></span><span>Reserve</span></a>
+</header>
+
+<div class="depth" aria-hidden="true"><span>Depth</span><span class="depth-n">0000 m</span><div class="depth-scale"><i></i></div></div>
+
+<main id="top">
+  <section class="hero" id="hero">
+    <div class="hero-kicker eyebrow"><span>Maison de parfum — Port of Spain</span><span>Est. MMXXVI</span></div>
+    <h1 class="hero-title" aria-label="MAREA">MAREA<span class="sweep" aria-hidden="true"></span></h1>
+    <div class="hero-bottom">
+      <div class="hero-left">
+        <p class="hero-tag"><em>Bottled</em> from the deep.</p>
+        <p class="hero-sub">Small-batch Caribbean fragrance, distilled from sea salt, night-blooming cereus and grey ambergris.</p>
+      </div>
+      <div class="scroll-cue"><span>Descend</span><i></i></div>
+      <div class="scent-ui">
+        <div class="sn-name" aria-live="polite">Nocturne</div>
+        <div class="sn-notes">Night cereus · Sea salt · Vetiver</div>
+        <div class="scents" role="tablist" aria-label="Choose a scent">
+          <button class="scent-btn is-active" data-scent="0" role="tab" aria-selected="true" data-cursor="Wear"><span class="sw" style="background:radial-gradient(circle at 35% 30%,#fff,#3fe8ff 35%,#7a4dff)"></span>N°01</button>
+          <button class="scent-btn" data-scent="1" role="tab" aria-selected="false" data-cursor="Wear"><span class="sw" style="background:radial-gradient(circle at 35% 30%,#fff,#7dffd8 35%,#1aa0c8)"></span>N°02</button>
+          <button class="scent-btn" data-scent="2" role="tab" aria-selected="false" data-cursor="Wear"><span class="sw" style="background:radial-gradient(circle at 35% 30%,#fff,#ffc46b 35%,#ff4f6d)"></span>N°03</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="manifesto" id="manifesto">
+    <div class="wrap">
+      <p class="eyebrow">(01) — The idea</p>
+      <p class="big-copy">Some scents are grown in gardens. Ours were <em>found</em> twelve hundred metres down, where sunlight gives up and the sea begins to glow.</p>
+    </div>
+  </section>
+
+  <section class="notes" id="notes">
+    <div class="notes-inner">
+      <div class="notes-head"><p class="eyebrow">(02) — Anatomy of a scent</p><p class="eyebrow notes-count">01 / 03</p></div>
+      <div class="notes-big" aria-hidden="true">N°</div>
+      <div class="note"><span class="note-num">01 — Top</span><h3 class="note-title">Sea salt<br><em>&amp; bergamot</em></h3><p>The first breath: cold spray off a night swell. Bright, mineral, and gone within minutes.</p><span class="note-tier">0 – 15 min</span></div>
+      <div class="note"><span class="note-num">02 — Heart</span><h3 class="note-title">Night-blooming<br><em>cereus</em></h3><p>A cactus flower that opens once a year, after dark. Creamy and lunar, with a little danger in it.</p><span class="note-tier">15 min – 4 h</span></div>
+      <div class="note"><span class="note-num">03 — Base</span><h3 class="note-title">Vetiver &amp;<br><em>grey ambergris</em></h3><p>What stays on your skin at sunrise: smoky roots, warm salt and skin.</p><span class="note-tier">4 – 12 h</span></div>
+      <div class="notes-progress"><span><i></i></span><span><i></i></span><span><i></i></span></div>
+    </div>
+  </section>
+
+  <section class="collection" id="collection">
+    <div class="h-track">
+      <div class="h-intro">
+        <p class="eyebrow">(03) — The collection</p>
+        <h2 class="h2" style="margin-top:28px">Three depths.<br><em>One sea.</em></h2>
+        <p>Each bottle is filled by hand in batches of 300, then rested in the dark for 48 hours. Pick a depth and the whole site changes with it.</p>
+      </div>
+      <article class="card" data-tilt style="--c1:#3fe8ff;--c2:#7a4dff">
+        <div class="card-meta"><span>N°01</span><span>50 ml · TT$ 890</span></div>
+        <div class="orb"><i></i><i></i><i></i></div>
+        <h3>Nocturne</h3><p>Night cereus, sea salt, vetiver.</p>
+        <button class="card-cta" data-scent="0" data-magnetic="0.3" data-cursor="Wear">Wear N°01 <span>→</span></button>
+      </article>
+      <article class="card" data-tilt style="--c1:#7dffd8;--c2:#1aa0c8">
+        <div class="card-meta"><span>N°02</span><span>50 ml · TT$ 890</span></div>
+        <div class="orb"><i></i><i></i><i></i></div>
+        <h3>Salt Vetiver</h3><p>Sea spray, vetiver root, driftwood.</p>
+        <button class="card-cta" data-scent="1" data-magnetic="0.3" data-cursor="Wear">Wear N°02 <span>→</span></button>
+      </article>
+      <article class="card" data-tilt style="--c1:#ffc46b;--c2:#ff4f6d">
+        <div class="card-meta"><span>N°03</span><span>50 ml · TT$ 940</span></div>
+        <div class="orb"><i></i><i></i><i></i></div>
+        <h3>Ember Tide</h3><p>Grey ambergris, tonka, smoked salt.</p>
+        <button class="card-cta" data-scent="2" data-magnetic="0.3" data-cursor="Wear">Wear N°03 <span>→</span></button>
+      </article>
+    </div>
+  </section>
+
+  <section class="dive" id="ritual">
+    <svg class="dive-svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <mask id="diveMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="900">
+          <rect x="-2000" y="-2000" width="5600" height="4900" fill="#fff"/>
+          <g id="diveText"><text x="800" y="560" text-anchor="middle" font-family="Bodoni Moda, Didot, serif" font-size="360" letter-spacing="-12" fill="#000">DEEP</text></g>
+        </mask>
+      </defs>
+      <rect id="diveInk" x="-2000" y="-2000" width="5600" height="4900" fill="#05040c" mask="url(#diveMask)"/>
+    </svg>
+    <p class="eyebrow dive-kicker">Into the</p>
+  </section>
+
+  <section class="ritual">
+    <div class="stats">
+      <div class="stat" data-speed="-40"><span class="stat-n" data-count="1200">0</span><span class="stat-u">m</span><p>The depth our ambergris accord is named after.</p></div>
+      <div class="stat" data-speed="30"><span class="stat-n" data-count="48">0</span><span class="stat-u">h</span><p>Cold maceration, in total darkness, for every batch.</p></div>
+      <div class="stat" data-speed="-10"><span class="stat-n" data-count="300">0</span><span class="stat-u">btl</span><p>Bottles per batch. When they're gone, the tide moves on.</p></div>
+    </div>
+    <div class="marquee" aria-hidden="true">
+      <div class="mq-row" data-dir="-1">salt · <em>night</em> · skin · salt · <em>night</em> · skin · salt · <em>night</em> · skin</div>
+      <div class="mq-row outline" data-dir="1">the deep remembers · the deep remembers · the deep remembers</div>
+    </div>
+  </section>
+
+  <section class="reserve" id="reserve">
+    <div class="reserve-grid">
+      <div>
+        <p class="eyebrow">(04) — Reserve</p>
+        <h2 class="reserve-title">Find your<br><em>depth.</em></h2>
+      </div>
+      <div class="reserve-side">
+        <p>The next batch surfaces in November: 300 bottles of each scent, numbered by hand.</p>
+        <a class="btn-big" href="https://wa.me/18682591409?text=Hi%20Portside%2C%20I%20saw%20the%20MAREA%20concept%20site" target="_blank" rel="noopener" data-magnetic="0.45" data-cursor="Talk"><span>Reserve<br>a bottle</span></a>
+        <p class="concept">MAREA is a fictional brand. <a href="https://wa.me/18682591409" target="_blank" rel="noopener">Concept site by Portside Digital ↗</a></p>
+      </div>
+    </div>
+    <footer class="foot"><span>© 2026 MAREA — concept build</span><span>Port of Spain · Trinidad &amp; Tobago</span><span>Built by Portside Digital</span></footer>
+  </section>
+</main>
+
+<div id="ad" aria-hidden="true"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+THREE.ColorManagement.enabled = false;            // every colour below is authored in display (sRGB) space
+
+/* =================================================================== */
+/*  Setup                                                               */
+/* =================================================================== */
+const Q = new URLSearchParams(location.search);
+const AD = Q.has('ad');
+const RM = !AD && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COARSE = matchMedia('(pointer: coarse)').matches;
+const MOBILE = AD ? false : (innerWidth < 760 || COARSE);
+const DPR = AD ? 1 : Math.min(devicePixelRatio || 1, MOBILE ? 1.5 : 2);
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+gsap.registerPlugin(ScrollTrigger, SplitText, CustomEase);
+CustomEase.create('silk', 'M0,0 C0.16,1 0.3,1 1,1');
+CustomEase.create('tide', 'M0,0 C0.78,0 0.22,1 1,1');
+CustomEase.create('surge', 'M0,0 C0.25,0 0.15,1.2 0.5,1.05 0.7,0.97 0.85,1 1,1');
+gsap.ticker.lagSmoothing(0);
+
+if (AD) document.body.classList.add('ad');
+
+// deterministic RNG (ad renders must be identical every time)
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+let rand = mulberry(20261005);
+
+const SCENTS = [
+  { num: 'N°01', name: 'Nocturne',     notes: 'Night cereus · Sea salt · Vetiver',
+    bg: ['#2d1b70', '#110a32', '#04030b'], la: '#3fe8ff', lb: '#6a3dff', accent: '#b9a6ff', glow: '#7ff3ff', deep: '#120a33' },
+  { num: 'N°02', name: 'Salt Vetiver', notes: 'Sea spray · Vetiver root · Driftwood',
+    bg: ['#0b6270', '#04313c', '#010a0e'], la: '#8affdf', lb: '#118fc0', accent: '#86f7e6', glow: '#c2fff3', deep: '#032a33' },
+  { num: 'N°03', name: 'Ember Tide',   notes: 'Grey ambergris · Tonka · Smoked salt',
+    bg: ['#7a3216', '#2e1108', '#0b0402'], la: '#ffc46b', lb: '#ff3f62', accent: '#ffc39a', glow: '#ffd9a8', deep: '#2a0f07' },
+];
+const col = h => new THREE.Color(h);
+
+/* =================================================================== */
+/*  Shared GLSL                                                         */
+/* =================================================================== */
+const NOISE = /* glsl */`
+vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+float snoise(vec3 v){
+  const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+  vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+  vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+  vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+  i=mod289(i);
+  vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+  float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+  vec4 j=p-49.0*floor(p*ns.z*ns.z);
+  vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+  vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+  vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+  vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+  vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+  vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+  vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+  p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+  vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+  return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+}`;
+
+// a procedural "studio" environment: soft boxes + a tinted horizon, so every glossy surface has something to reflect
+const STUDIO = /* glsl */`
+uniform vec3 uAccent; uniform vec3 uGlow; uniform vec3 uDeep;
+vec3 studio(vec3 r){
+  r = normalize(r);
+  float y = r.y;
+  float az = atan(r.x, r.z);
+  vec3 c = mix(uDeep*0.7, uAccent*0.30, smoothstep(-0.4, 0.9, y));
+  c += vec3(1.0) * smoothstep(0.72, 0.96, y) * 1.25;                                   // overhead softbox
+  c += vec3(1.0,0.97,0.94) * smoothstep(0.16, 0.03, abs(az - 1.05)) * smoothstep(-0.5,0.1,y) * smoothstep(0.95,0.45,y) * 1.5; // key strip
+  c += uGlow * smoothstep(0.12, 0.0, abs(az + 1.35)) * smoothstep(-0.7, 0.3, y) * 1.15; // bioluminescent rim strip
+  c += uGlow * smoothstep(0.2, 0.0, abs(az - 2.6)) * 0.35;
+  c += uAccent * smoothstep(-0.35, -0.95, y) * 0.3;                                    // sea-floor bounce
+  return c;
+}`;
+
+/* =================================================================== */
+/*  Background renderer: deep water, caustics, god rays, colour flood   */
+/* =================================================================== */
+const bgCanvas = $('#bg');
+const bgR = new THREE.WebGLRenderer({ canvas: bgCanvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: AD });
+const BG_SCALE = AD ? 0.75 : MOBILE ? 0.5 : 0.7;
+bgR.setPixelRatio(BG_SCALE * (AD ? 1 : Math.min(devicePixelRatio || 1, 1.5)));
+const bgScene = new THREE.Scene();
+const bgCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const s0 = SCENTS[0];
+const bgU = {
+  uTime: { value: 0 }, uAspect: { value: 1 }, uFlood: { value: 0 }, uFloodO: { value: new THREE.Vector2(.5, .5) },
+  uMouse: { value: new THREE.Vector2(.5, .5) }, uRipple: { value: 0 }, uDepth: { value: 0 }, uIntro: { value: AD ? 1 : 0 },
+  uA0: { value: col(s0.bg[0]) }, uA1: { value: col(s0.bg[1]) }, uA2: { value: col(s0.bg[2]) }, uGA: { value: col(s0.glow) },
+  uB0: { value: col(s0.bg[0]) }, uB1: { value: col(s0.bg[1]) }, uB2: { value: col(s0.bg[2]) }, uGB: { value: col(s0.glow) },
+};
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: bgU, depthTest: false, depthWrite: false,
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
+  fragmentShader: /* glsl */`
+  precision highp float;
+  varying vec2 vUv;
+  uniform float uTime, uAspect, uFlood, uRipple, uDepth, uIntro;
+  uniform vec2 uFloodO, uMouse;
+  uniform vec3 uA0,uA1,uA2,uGA,uB0,uB1,uB2,uGB;
+  ${NOISE}
+  vec3 grad(vec3 c0, vec3 c1, vec3 c2, vec2 p){ float d = length(p*vec2(.85,1.)); return mix(mix(c0,c1,smoothstep(0.,.62,d)), c2, smoothstep(.5,1.35,d)); }
+  float caustic(vec2 p, float t){
+    vec2 q = p*2.6; float c = 0.;
+    for(int i=0;i<3;i++){
+      float fi = float(i);
+      q += vec2(snoise(vec3(q*.55, t*.12+fi)), snoise(vec3(q*.55+7.3, t*.12-fi)))*.55;
+      c += abs(sin(q.x + t*.35) * sin(q.y - t*.27));
+    }
+    return pow(clamp(1. - c/3., 0., 1.), 7.);
+  }
+  void main(){
+    vec2 uv = vUv;
+    vec2 asp = vec2(uAspect, 1.);
+    vec2 p = (uv - vec2(.5,.54)) * asp;
+    vec2 m = (uMouse - vec2(.5,.54)) * asp;
+    float md = length(p - m);
+    vec2 pr = p + normalize(p - m + 1e-5) * sin(md*34. - uTime*5.) * exp(-md*4.5) * uRipple * .018;
+    float n = snoise(vec3(pr*1.2, uTime*.045));
+    vec2 pg = pr + n*.05;
+    vec3 ca = grad(uA0,uA1,uA2,pg), cb = grad(uB0,uB1,uB2,pg);
+    // liquid colour flood from the click origin
+    vec2 fo = (uFloodO - vec2(.5,.54)) * asp;
+    float edgeN = snoise(vec3(p*2.4, uTime*.5))*.07 + snoise(vec3(p*7., uTime))*.02;
+    float fd = length(p - fo) + edgeN;
+    float front = uFlood * 2.6;
+    float k = smoothstep(front + .025, front - .025, fd);
+    vec3 c = mix(ca, cb, k);
+    vec3 glow = mix(uGA, uGB, k);
+    float live = step(.001, uFlood) * step(uFlood, .999);
+    c += glow * smoothstep(.12, 0., abs(fd - front)) * live * .55;
+    // caustic light near the surface, fading as you descend
+    float top = smoothstep(-.35, .75, p.y);
+    c += glow * caustic(pr*.85 + vec2(0., uTime*.015), uTime) * top * .28 * (1. - uDepth*.9);
+    // god rays
+    vec2 rp = p - vec2(.2*uAspect, 1.15);
+    float ang = atan(rp.x, -rp.y);
+    float rays = pow(snoise(vec3(ang*5.5, uTime*.07, 0.))*.5+.5, 3.) * smoothstep(2.1, .2, length(rp));
+    c += glow * rays * .13 * (1. - uDepth);
+    // floating haze
+    c += glow * .035 * (snoise(vec3(p*1.6 + vec2(0., uTime*.03), uTime*.05))*.5+.5) * (1.-uDepth*.6);
+    c *= mix(1., .42, uDepth);
+    c *= 1. - .5*smoothstep(.45, 1.45, length(p*vec2(.75,1.)));
+    gl_FragColor = vec4(c * uIntro, 1.);
+  }`,
+});
+bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat));
+
+/* =================================================================== */
+/*  Foreground renderer: bottle, pearls, sea glass, plankton            */
+/* =================================================================== */
+const fxCanvas = $('#fx');
+const R = new THREE.WebGLRenderer({ canvas: fxCanvas, antialias: false, alpha: true, premultipliedAlpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: AD });
+R.setPixelRatio(DPR);
+R.setClearColor(0x000000, 0);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+camera.position.set(0, 0, 10);
+
+const shared = {
+  uTime: { value: 0 },
+  uAccent: { value: col(s0.accent) }, uGlow: { value: col(s0.glow) }, uDeep: { value: col(s0.deep) },
+};
+
+/* ---------- bottle ---------- */
+const bottle = new THREE.Group();
+const bottleTilt = new THREE.Group();   // pointer tilt + spin live here
+bottle.add(bottleTilt);
+scene.add(bottle);
+
+const VS_WORLD = /* glsl */`
+varying vec3 vN; varying vec3 vW; varying vec3 vL;
+#ifdef USE_INSTANCING_COLOR
+varying vec3 vIC;
+#endif
+void main(){
+  #ifdef USE_INSTANCING
+    mat4 m = modelMatrix * instanceMatrix;
+  #else
+    mat4 m = modelMatrix;
+  #endif
+  #ifdef USE_INSTANCING_COLOR
+    vIC = instanceColor;
+  #endif
+  vec4 w = m * vec4(position, 1.);
+  vW = w.xyz; vL = position;
+  vN = normalize(mat3(m) * normal);
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+
+function glassMaterial(side, opacity) {
+  return new THREE.ShaderMaterial({
+    uniforms: { ...shared, uOpacity: { value: opacity } },
+    vertexShader: VS_WORLD, side, transparent: true, depthWrite: false,
+    fragmentShader: /* glsl */`
+    uniform float uTime, uOpacity;
+    varying vec3 vN, vW, vL;
+    ${STUDIO}
+    void main(){
+      vec3 N = normalize(vN); if(!gl_FrontFacing) N = -N;
+      vec3 V = normalize(cameraPosition - vW);
+      float ndv = clamp(dot(N,V), 0., 1.);
+      float fres = pow(1. - ndv, 3.);
+      vec3 refl = studio(reflect(-V, N));
+      vec3 film = .5 + .5*cos(6.2831*(vec3(0.,.33,.67) + ndv*1.3 + uTime*.03));
+      vec3 c = refl*(.3 + .95*fres) + film*fres*.3;
+      float lum = dot(refl, vec3(.3,.59,.11));
+      float a = clamp(.045 + fres*.8 + smoothstep(.85, 1.7, lum)*.65, 0., 1.) * uOpacity;
+      gl_FragColor = vec4(c, a);
+    }`,
+  });
+}
+
+const liquidU = {
+  ...shared,
+  uLA: { value: col(s0.la) }, uLB: { value: col(s0.lb) },
+  uFill: { value: .5 }, uWob: { value: new THREE.Vector2() }, uCenter: { value: new THREE.Vector3() },
+  uSurge: { value: 0 }, uScale: { value: 1 },
+};
+const liquidMat = new THREE.ShaderMaterial({
+  uniforms: liquidU, vertexShader: VS_WORLD, side: THREE.DoubleSide,
+  fragmentShader: /* glsl */`
+  uniform float uTime, uFill, uSurge, uScale;
+  uniform vec2 uWob; uniform vec3 uCenter, uLA, uLB;
+  varying vec3 vN, vW, vL;
+  ${STUDIO}
+  ${NOISE}
+  void main(){
+    vec3 rel = (vW - uCenter) / uScale;
+    float surf = uFill + rel.x*uWob.x + rel.z*uWob.y + sin(rel.x*5. + uTime*2.3)*.012 + sin(rel.z*6. - uTime*1.7)*.01;
+    if (rel.y > surf) discard;
+    vec3 V = normalize(cameraPosition - vW);
+    if (!gl_FrontFacing) {                     // the inside back faces read as the liquid's top surface
+      vec3 c = mix(uLA, uGlow, .45) * .95;
+      c += uGlow * .25 * (snoise(vec3(rel.xz*4., uTime*.6))*.5+.5);
+      gl_FragColor = vec4(c, 1.); return;
+    }
+    vec3 N = normalize(vN);
+    float ndv = clamp(dot(N,V), 0., 1.);
+    float h = clamp((rel.y + .92) / (uFill + .92), 0., 1.);
+    float sw = snoise(vec3(vL*1.7 + vec3(0., uTime*.22, uTime*.05)))*.5 + .5;
+    float sw2 = snoise(vec3(vL*5.5 - vec3(0., uTime*.5, 0.)))*.5 + .5;
+    vec3 c = mix(uLB, uLA, smoothstep(0., 1., h*.75 + sw*.4));
+    c *= .5 + .65*ndv;
+    c += uGlow * pow(1. - ndv, 2.2) * .7;
+    c += uGlow * pow(sw2, 9.) * 1.4;           // bioluminescent sparks
+    c += uGlow * smoothstep(.06, 0., abs(rel.y - surf)) * .6;  // meniscus line
+    c += uGlow * uSurge * .45;
+    gl_FragColor = vec4(c, 1.);
+  }`,
+});
+
+function pearlMaterial(extra = '') {
+  return new THREE.ShaderMaterial({
+    uniforms: { ...shared, uHue: { value: 0 } },
+    vertexShader: VS_WORLD,
+    fragmentShader: /* glsl */`
+    uniform float uTime, uHue;
+    varying vec3 vN, vW, vL;
+    #ifdef USE_INSTANCING_COLOR
+    varying vec3 vIC;
+    #endif
+    ${STUDIO}
+    void main(){
+      vec3 N = normalize(vN);
+      vec3 V = normalize(cameraPosition - vW);
+      float ndv = clamp(dot(N,V), 0., 1.);
+      float fres = pow(1. - ndv, 2.4);
+      float hue = uHue;
+      #ifdef USE_INSTANCING_COLOR
+        hue += vIC.r;
+      #endif
+      vec3 film = .5 + .5*cos(6.2831*(vec3(0.,.33,.67) + ndv*1.7 + hue));
+      vec3 refl = studio(reflect(-V, N));
+      float diff = .55 + .45*dot(N, normalize(vec3(.4,.85,.5)));
+      vec3 base = vec3(.96,.93,.9);
+      float sheen = pow(1. - ndv, 1.1);
+      vec3 c = base*(.3 + diff*.62) + film*.2*sheen + refl*(.14 + fres*.6) + uAccent*fres*.28;
+      c = mix(c, uDeep*.9, smoothstep(10.5, 18., length(cameraPosition - vW)) * .7);   // depth fog
+      gl_FragColor = vec4(c, 1.);
+    }`,
+  });
+}
+
+const crystalMat = new THREE.ShaderMaterial({
+  uniforms: { ...shared },
+  vertexShader: VS_WORLD,
+  fragmentShader: /* glsl */`
+  uniform float uTime;
+  varying vec3 vN, vW, vL;
+  #ifdef USE_INSTANCING_COLOR
+  varying vec3 vIC;
+  #endif
+  ${STUDIO}
+  void main(){
+    vec3 N = normalize(cross(dFdx(vW), dFdy(vW)));
+    vec3 V = normalize(cameraPosition - vW);
+    if (dot(N,V) < 0.) N = -N;
+    float ndv = clamp(dot(N,V), 0., 1.);
+    float fres = pow(1. - ndv, 2.);
+    vec3 refl = studio(reflect(-V, N));
+    vec3 tint = mix(uAccent, uGlow, .5);
+    vec3 c = tint*(.18 + .3*ndv) + refl*(.35 + fres*.8) + uGlow*fres*.5;
+    c = mix(c, uDeep*.9, smoothstep(10.5, 18., length(cameraPosition - vW)) * .7);
+    gl_FragColor = vec4(c, 1.);
+  }`,
+});
+
+// geometry — a squat rounded flacon, a short neck and a pearl stopper
+const GLASS = { w: 1.5, h: 2.0, d: .86 };
+const glassGeo = new RoundedBoxGeometry(GLASS.w, GLASS.h, GLASS.d, 6, .3);
+const liquidGeo = new RoundedBoxGeometry(GLASS.w - .16, GLASS.h - .16, GLASS.d - .16, 5, .24);
+const glassBack = new THREE.Mesh(glassGeo, glassMaterial(THREE.BackSide, .55));
+const liquid = new THREE.Mesh(liquidGeo, liquidMat);
+const glassFront = new THREE.Mesh(glassGeo, glassMaterial(THREE.FrontSide, 1));
+liquid.renderOrder = 1; glassBack.renderOrder = 4; glassFront.renderOrder = 6;
+const neckGeo = new THREE.CylinderGeometry(.2, .24, .34, 40, 1, false);
+const neck = new THREE.Mesh(neckGeo, glassMaterial(THREE.DoubleSide, .9));
+neck.position.y = GLASS.h / 2 + .15; neck.renderOrder = 6;
+const collar = new THREE.Mesh(new THREE.TorusGeometry(.27, .05, 20, 64), pearlMaterial());
+collar.rotation.x = Math.PI / 2; collar.position.y = GLASS.h / 2 + .3;
+const stopperMat = pearlMaterial();
+const stopper = new THREE.Mesh(new THREE.SphereGeometry(.42, 64, 48), stopperMat);
+stopper.position.y = GLASS.h / 2 + .7;
+bottleTilt.add(liquid, glassBack, glassFront, neck, collar, stopper);
+bottleTilt.position.y = -.35;  // optical centre of the whole object
+
+// engraved label on the front face (redrawn on every scent change)
+const labelCanvas = document.createElement('canvas');
+labelCanvas.width = 512; labelCanvas.height = 640;
+const labelTex = new THREE.CanvasTexture(labelCanvas);
+labelTex.colorSpace = THREE.NoColorSpace;
+labelTex.anisotropy = 4;
+const label = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 1.325), new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false }));
+label.position.z = GLASS.d / 2 + .004; label.position.y = -.06; label.renderOrder = 7;
+bottleTilt.add(label);
+function drawLabel(s) {
+  const c = labelCanvas.getContext('2d');
+  c.clearRect(0, 0, 512, 640);
+  c.fillStyle = 'rgba(245,240,233,.92)'; c.textAlign = 'center';
+  c.font = '400 92px "Bodoni Moda", Didot, serif';
+  c.letterSpacing = '22px';
+  c.fillText('MAREA', 268, 210);
+  c.letterSpacing = '0px';
+  c.fillRect(196, 250, 120, 2);
+  c.font = 'italic 400 54px "Bodoni Moda", serif';
+  c.fillText(s.name, 256, 340);
+  c.font = '500 26px "JetBrains Mono", monospace';
+  c.fillStyle = 'rgba(245,240,233,.7)';
+  c.letterSpacing = '6px';
+  c.fillText(s.num + ' · EAU DE PARFUM', 259, 420);
+  c.fillText('50 ML — 1200 M', 259, 462);
+  c.letterSpacing = '0px';
+  labelTex.needsUpdate = true;
+}
+
+/* ---------- pearls + sea glass swarm ---------- */
+const N_PEARL = MOBILE ? 7 : 12, N_GLASS = MOBILE ? 6 : 10;
+const pearlMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 40, 28), pearlMaterial(), N_PEARL);
+const glassMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), crystalMat, N_GLASS);
+pearlMesh.frustumCulled = glassMesh.frustumCulled = false;
+pearlMesh.renderOrder = 2; glassMesh.renderOrder = 2;
+scene.add(pearlMesh, glassMesh);
+
+const items = [];
+function makeItem(kind, i) {
+  return { kind, i, u: 0, v: 0, z: 0, pos: new THREE.Vector3(), vel: new THREE.Vector3(), rot: new THREE.Euler(rand()*6, rand()*6, rand()*6),
+    spin: new THREE.Vector3((rand()-.5)*.6, (rand()-.5)*.6, (rand()-.5)*.4), size: 0, ph: rand()*100, sq: new THREE.Vector3(1,1,1) };
+}
+for (let i = 0; i < N_PEARL; i++) items.push(makeItem(0, i));
+for (let i = 0; i < N_GLASS; i++) items.push(makeItem(1, i));
+const tmpC = new THREE.Color();
+items.forEach(it => { tmpC.setRGB(rand() * .35, 0, 0); (it.kind ? glassMesh : pearlMesh).setColorAt(it.i, tmpC); });
+
+// homes live on an elliptical ring around the bottle (angle + radius), so the swarm follows it from section to section
+// and tightens/loosens with stage.spread. Near items stay out of the bottom corners where the copy sits.
+function seedHomes() {
+  items.forEach(it => {
+    const near = rand() < .25;
+    let a, tries = 0;
+    do { a = rand() * Math.PI * 2; tries++; } while (near && Math.sin(a) < -.35 && tries < 30);
+    it.a = a;
+    it.r = .5 + rand() * .55;
+    it.z = near ? 1 + rand() * 1.8 : -1.2 - rand() * 6;
+    it.size = (it.kind ? .12 : .1) + rand() * (it.kind ? .16 : .13);
+    if (near) it.size *= .9;
+    if (it.kind) it.sq.set(1, .55 + rand()*.6, .7 + rand()*.4);
+  });
+}
+seedHomes();
+
+/* ---------- plankton particles ---------- */
+function plankton(count, spread, sizeMin, sizeMax, alpha) {
+  const g = new THREE.BufferGeometry();
+  const p = new Float32Array(count*3), seed = new Float32Array(count), size = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    p[i*3] = (rand()*2-1)*spread; p[i*3+1] = (rand()*2-1)*8; p[i*3+2] = -10 + rand()*13.5;
+    seed[i] = rand(); size[i] = sizeMin + Math.pow(rand(), 3)*(sizeMax - sizeMin);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+  g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+  const m = new THREE.ShaderMaterial({
+    uniforms: { ...shared, uPR: { value: DPR }, uMouse: { value: new THREE.Vector2(9, 9) }, uAspect: { value: 1 }, uAlpha: { value: alpha }, uIntro: { value: AD ? 1 : 0 }, uSpeed: { value: 1 } },
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, premultipliedAlpha: true,
+    vertexShader: /* glsl */`
+    attribute float aSeed; attribute float aSize;
+    uniform float uTime, uPR, uAspect, uSpeed; uniform vec2 uMouse;
+    varying float vA; varying float vSeed;
+    void main(){
+      vec3 p = position;
+      p.y = mod(p.y + uTime*(.1 + aSeed*.22)*uSpeed + 8., 16.) - 8.;
+      p.x += sin(uTime*.23 + aSeed*31.)*.4;
+      p.z += cos(uTime*.19 + aSeed*17.)*.3;
+      vec4 mv = modelViewMatrix * vec4(p, 1.);
+      vec4 clip = projectionMatrix * mv;
+      vec2 ndc = clip.xy / clip.w;
+      vec2 d = (ndc - uMouse) * vec2(uAspect, 1.);
+      float f = smoothstep(.42, 0., length(d));
+      ndc += normalize(d + 1e-5) * f * .11 * vec2(1./uAspect, 1.);
+      clip.xy = ndc * clip.w;
+      gl_Position = clip;
+      gl_PointSize = aSize * uPR * 32. / -mv.z;
+      vA = smoothstep(-15., -3., mv.z) * smoothstep(8., 6., abs(p.y)) * (.35 + .65*fract(aSeed*91.7));
+      vSeed = aSeed;
+    }`,
+    fragmentShader: /* glsl */`
+    uniform float uTime, uAlpha, uIntro;
+    varying float vA; varying float vSeed;
+    ${STUDIO}
+    void main(){
+      float d = length(gl_PointCoord - .5);
+      float a = pow(smoothstep(.5, 0., d), 1.7);
+      float tw = .55 + .45*sin(uTime*1.8 + vSeed*60.);
+      vec3 c = mix(uGlow, mix(uAccent, vec3(1.), .4), step(.7, fract(vSeed*13.)));
+      float k = a * vA * tw * uAlpha * uIntro;
+      gl_FragColor = vec4(c*k, k*.5);
+    }`,
+  });
+  const pts = new THREE.Points(g, m); pts.frustumCulled = false; pts.renderOrder = 8;
+  return pts;
+}
+const dust = plankton(MOBILE ? 900 : 2600, 12, 1.2, 5.5, .9);
+const bokeh = plankton(MOBILE ? 22 : 46, 10, 14, 34, .18);
+scene.add(dust, bokeh);
+
+/* ---------- post: render to target, spin motion-blur + aberration on the way out ---------- */
+const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: MOBILE ? 2 : 4 });
+const postU = { tScene: { value: rt.texture }, uBlur: { value: 0 }, uCenter: { value: new THREE.Vector2(.5, .5) }, uAb: { value: .0015 }, uRes: { value: new THREE.Vector2(1, 1) } };
+const postMat = new THREE.ShaderMaterial({
+  uniforms: postU, depthTest: false, depthWrite: false, blending: THREE.NoBlending,
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
+  fragmentShader: /* glsl */`
+  uniform sampler2D tScene; uniform float uBlur, uAb; uniform vec2 uCenter, uRes;
+  varying vec2 vUv;
+  vec4 tap(vec2 uv){ return texture2D(tScene, uv); }
+  void main(){
+    vec2 uv = vUv;
+    vec2 fromC = uv - uCenter;
+    float near = 1. - smoothstep(.15, .6, length(fromC * vec2(uRes.x/uRes.y, 1.)));
+    float amt = uBlur * near;
+    vec4 c = vec4(0.);
+    if (amt > .002) {
+      vec2 dir = vec2(.055 * amt, 0.);
+      float tot = 0.;
+      for (int i = 0; i < 18; i++) {
+        float t = float(i)/17. - .5;
+        float w = 1. - abs(t)*1.2;
+        c += tap(uv + dir*t) * w; tot += w;
+      }
+      c /= tot;
+    } else c = tap(uv);
+    float ab = uAb + uBlur*.006;
+    vec2 off = fromC * ab;
+    c.r = mix(c.r, tap(uv + off).r, .85);
+    c.b = mix(c.b, tap(uv - off).b, .85);
+    gl_FragColor = clamp(c, 0., 8.);
+  }`,
+});
+const postScene = new THREE.Scene();
+postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
+
+/* =================================================================== */
+/*  State                                                               */
+/* =================================================================== */
+const pointer = { x: 0, y: 0, sx: 0, sy: 0, px: innerWidth/2, py: innerHeight/2, lpx: innerWidth/2, lpy: innerHeight/2, speed: 0, active: false, power: 1 };
+const stage = { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1 };      // scroll-choreographed bottle + swarm placement
+const segs = [];   // scroll segments: { st, from, to, p }
+const intro = { y: AD ? 0 : -4.5, spin: AD ? 0 : -Math.PI*2, swarm: AD ? 0 : 1, p: AD ? 1 : 0 };
+const fxState = { spin: 0, squash: 0, collapse: 0, surge: 0, blur: 0, hue: 0 };
+const B = { rx: 0, ry: 0, vrx: 0, vry: 0, wob: new THREE.Vector2(), wobV: new THREE.Vector2(), lastSpin: 0, lastX: 0 };
+let W = innerWidth, H = innerHeight;
+
+function viewHalf(z) { const h = Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * (camera.position.z - z); return { h, w: h * camera.aspect }; }
+
+function resize() {
+  W = AD ? 1080 : innerWidth; H = AD ? 1920 : innerHeight;
+  bgR.setSize(W, H, false); R.setSize(W, H, false);
+  bgCanvas.style.width = fxCanvas.style.width = W + 'px';
+  bgCanvas.style.height = fxCanvas.style.height = H + 'px';
+  camera.aspect = W / H; camera.updateProjectionMatrix();
+  rt.setSize(Math.round(W * R.getPixelRatio()), Math.round(H * R.getPixelRatio()));
+  bgU.uAspect.value = W / H;
+  dust.material.uniforms.uAspect.value = bokeh.material.uniforms.uAspect.value = W / H;
+  postU.uRes.value.set(W, H);
+  // portrait screens: pull the camera back so the bottle keeps breathing room
+  // keep the bottle ~55% of the frame width on portrait screens
+  baseCamZ = W / H < .8 ? Math.max(10, 1.5 / (.55 * .5359 * (W / H))) : 10;
+}
+let baseCamZ = 10;
+resize();
+addEventListener('resize', () => { if (!AD) resize(); });
+
+/* =================================================================== */
+/*  Frame update (shared by the live loop and the ad recorder)          */
+/* =================================================================== */
+const tmpV = new THREE.Vector3(), dummy = new THREE.Object3D();
+let lastPointerT = 0;
+
+function update(dt, t) {
+  dt = Math.min(dt, 1/20);
+  shared.uTime.value = t;
+  bgU.uTime.value = t;
+
+  // pointer smoothing + speed (drives ripples and scatter strength)
+  pointer.sx += (pointer.x - pointer.sx) * (1 - Math.exp(-dt*6));
+  pointer.sy += (pointer.y - pointer.sy) * (1 - Math.exp(-dt*6));
+  const pdx = pointer.px - pointer.lpx, pdy = pointer.py - pointer.lpy;
+  pointer.lpx = pointer.px; pointer.lpy = pointer.py;
+  const inst = Math.hypot(pdx, pdy) / Math.max(dt, 1e-3);
+  pointer.speed += (inst - pointer.speed) * (1 - Math.exp(-dt*10));
+  bgU.uMouse.value.set(pointer.px / W, 1 - pointer.py / H);
+  bgU.uRipple.value += (Math.min(pointer.speed / 1400, 1) - bgU.uRipple.value) * (1 - Math.exp(-dt*3));
+  const mouseNdc = pointer.active ? [pointer.x, pointer.y] : [9, 9];
+  dust.material.uniforms.uMouse.value.set(...mouseNdc);
+  bokeh.material.uniforms.uMouse.value.set(...mouseNdc);
+
+  // scroll stage: each segment eases its own smoothed progress; the latest started segment owns the stage
+  if (segs.length) {
+    let cur = null;
+    for (const sg of segs) {
+      sg.p += (sg.st.progress - sg.p) * (1 - Math.exp(-dt * 5));
+      if (sg.p > .0005) cur = sg;
+    }
+    const from = cur ? cur.from : segs[0].from, to = cur ? cur.to : segs[0].from;
+    const k = cur ? gsap.parseEase('sine.inOut')(Math.min(cur.p, 1)) : 0;
+    for (const key in from) stage[key] = from[key] + (to[key] - from[key]) * k;
+  }
+
+  // camera: gentle depth parallax
+  const camZ = baseCamZ * (stage.camZ / 10);
+  camera.position.x += (pointer.sx * .35 - camera.position.x) * (1 - Math.exp(-dt*3));
+  camera.position.y += (pointer.sy * .22 - camera.position.y) * (1 - Math.exp(-dt*3));
+  camera.position.z = camZ;
+  camera.lookAt(0, 0, 0);
+
+  // bottle placement (scroll stage + intro + idle float)
+  const vh = viewHalf(0);
+  const bx = stage.x * vh.w, by = stage.y * vh.h + intro.y + Math.sin(t*.8) * .07;
+  bottle.position.set(bx, by, 0);
+  const sq = fxState.squash;
+  const sc = stage.s;
+  bottle.scale.set(sc * (1 + sq*.06), sc * (1 - sq*.1), sc * (1 + sq*.06));
+
+  // spring tilt toward the cursor
+  const tRX = (RM ? 0 : -pointer.sy * .32) + stage.rx;
+  const tRY = (RM ? 0 : pointer.sx * .6) + Math.sin(t*.35) * .18 + stage.ry;
+  B.vrx += ((tRX - B.rx) * 26 - B.vrx * 6.5) * dt;
+  B.vry += ((tRY - B.ry) * 26 - B.vry * 6.5) * dt;
+  B.rx += B.vrx * dt; B.ry += B.vry * dt;
+  const spin = fxState.spin + intro.spin;
+  bottleTilt.rotation.set(B.rx, B.ry + spin, Math.sin(t*.6)*.035 - pointer.sx*.06);
+
+  // liquid slosh: a damped spring excited by angular and lateral velocity
+  const spinVel = (spin - B.lastSpin) / Math.max(dt, 1e-3); B.lastSpin = spin;
+  const latVel = (bx - B.lastX) / Math.max(dt, 1e-3); B.lastX = bx;
+  const exX = B.vry * .05 + latVel * .04 + spinVel * .012;
+  const exZ = -B.vrx * .06 + Math.abs(spinVel) * .004;
+  B.wobV.x += (-B.wob.x * 55 - B.wobV.x * 2.6 + exX * 9) * dt;
+  B.wobV.y += (-B.wob.y * 55 - B.wobV.y * 2.6 + exZ * 9) * dt;
+  B.wob.x = THREE.MathUtils.clamp(B.wob.x + B.wobV.x * dt, -.55, .55);
+  B.wob.y = THREE.MathUtils.clamp(B.wob.y + B.wobV.y * dt, -.55, .55);
+  bottle.updateMatrixWorld(true);
+  liquid.getWorldPosition(liquidU.uCenter.value);
+  liquidU.uWob.value.copy(B.wob);
+  liquidU.uScale.value = sc;
+  liquidU.uSurge.value = fxState.surge;
+
+  // motion blur follows real spin speed
+  const blurT = Math.min(Math.abs(spinVel) / 22, 1) + fxState.blur;
+  postU.uBlur.value += (blurT - postU.uBlur.value) * (1 - Math.exp(-dt*18));
+  tmpV.copy(bottle.position).project(camera);
+  postU.uCenter.value.set(tmpV.x*.5 + .5, tmpV.y*.5 + .5);
+
+  // swarm physics: drift + cursor repulsion + springs + implode/explode
+  const collapse = Math.max(fxState.collapse, intro.swarm);
+  const radius = Math.min(W, H) * .2;
+  for (const it of items) {
+    const hv = viewHalf(it.z);
+    const ex = hv.w * .98 * stage.spread, ey = hv.h * .92 * stage.spread;
+    const hx = bx + Math.cos(it.a) * it.r * ex + Math.sin(t*.4 + it.ph) * .18;
+    const hy = by + Math.sin(it.a) * it.r * ey + Math.cos(t*.33 + it.ph*1.3) * .22;
+    const tx = THREE.MathUtils.lerp(hx, bx, collapse);
+    const ty = THREE.MathUtils.lerp(hy, by, collapse);
+    const tz = THREE.MathUtils.lerp(it.z, -1.2, collapse);
+    let fx = (tx - it.pos.x) * 16, fy = (ty - it.pos.y) * 16, fz = (tz - it.pos.z) * 16;
+    if (pointer.active && !RM && collapse < .5) {
+      tmpV.copy(it.pos).project(camera);
+      const sxp = (tmpV.x*.5 + .5) * W, syp = (1 - (tmpV.y*.5 + .5)) * H;
+      const dx = sxp - pointer.px, dy = syp - pointer.py;
+      const d = Math.hypot(dx, dy);
+      const r = radius * (1 + Math.min(pointer.speed / 2500, .8));
+      if (d < r) {
+        const f = Math.pow(1 - d/r, 2) * 260 * pointer.power * (it.z > 0 ? 1 : .6);
+        const nx = dx / (d || 1), ny = dy / (d || 1);
+        fx += nx * f * (hv.w / (W/2)) * 6; fy -= ny * f * (hv.h / (H/2)) * 6;
+        it.spin.x += ny * f * .0009; it.spin.y += nx * f * .0009;
+      }
+    }
+    it.vel.x += (fx - it.vel.x * 4.2) * dt;
+    it.vel.y += (fy - it.vel.y * 4.2) * dt;
+    it.vel.z += (fz - it.vel.z * 4.2) * dt;
+    it.pos.addScaledVector(it.vel, dt);
+    it.spin.multiplyScalar(Math.exp(-dt*.8));
+    it.rot.x += (it.spin.x + .12) * dt; it.rot.y += (it.spin.y + .16) * dt; it.rot.z += it.spin.z * dt;
+    const s = it.size * (1 - collapse*.75) * intro.p * stage.ps;
+    dummy.position.copy(it.pos); dummy.rotation.copy(it.rot);
+    dummy.scale.set(s * it.sq.x, s * it.sq.y, s * it.sq.z);
+    dummy.updateMatrix();
+    (it.kind ? glassMesh : pearlMesh).setMatrixAt(it.i, dummy.matrix);
+  }
+  pearlMesh.instanceMatrix.needsUpdate = glassMesh.instanceMatrix.needsUpdate = true;
+  pearlMesh.material.uniforms.uHue.value = stopperMat.uniforms.uHue.value = fxState.hue + t*.02;
+}
+
+function render() {
+  bgR.render(bgScene, bgCam);
+  R.setRenderTarget(rt);
+  R.setClearColor(0x000000, 0); R.clear();
+  R.render(scene, camera);
+  R.setRenderTarget(null);
+  R.render(postScene, bgCam);
+}
+
+/* =================================================================== */
+/*  Scent switching: flood, 720° spin w/ motion blur, implode → explode */
+/* =================================================================== */
+let scentIdx = 0, switching = false;
+function applyScentDOM(s) {
+  document.documentElement.style.setProperty('--accent', s.accent);
+  document.documentElement.style.setProperty('--glow', s.glow);
+  $$('.scent-btn').forEach((b, i) => { b.classList.toggle('is-active', i === SCENTS.indexOf(s)); b.setAttribute('aria-selected', i === SCENTS.indexOf(s)); });
+}
+function tweenColor(c, hex, dur, ease = 'power2.inOut') { const t = col(hex); return gsap.to(c, { r: t.r, g: t.g, b: t.b, duration: dur, ease }); }
+
+function buildScentTL(i, ox = .5, oy = .5, speed = 1) {
+  const s = SCENTS[i];
+  const tl = gsap.timeline({ paused: true });
+  const D = 1.5 / speed;
+  const peak = D * .4;
+  tl.call(() => {
+    bgU.uB0.value.set(s.bg[0]); bgU.uB1.value.set(s.bg[1]); bgU.uB2.value.set(s.bg[2]); bgU.uGB.value.set(s.glow);
+    bgU.uFloodO.value.set(ox, oy);
+  }, null, 0);
+  tl.fromTo(bgU.uFlood, { value: 0 }, { value: 1, duration: D * .95, ease: 'tide' }, 0);
+  tl.call(() => {
+    bgU.uA0.value.copy(bgU.uB0.value); bgU.uA1.value.copy(bgU.uB1.value); bgU.uA2.value.copy(bgU.uB2.value); bgU.uGA.value.copy(bgU.uGB.value);
+    bgU.uFlood.value = 0;
+  }, null, D * .97);
+  // 720° spin; motion blur is derived from its velocity in update()
+  tl.to(fxState, { spin: `+=${Math.PI*4}`, duration: D * .82, ease: 'tide' }, 0);
+  tl.to(fxState, { squash: 1, duration: peak, ease: 'power2.in' }, 0)
+    .to(fxState, { squash: 0, duration: D * .6, ease: 'surge' }, peak);
+  tl.to(fxState, { surge: 1, duration: peak, ease: 'power2.in' }, 0).to(fxState, { surge: 0, duration: D*.5, ease: 'power2.out' }, peak);
+  // swarm implodes into the bottle, re-seeds, then explodes out
+  tl.to(fxState, { collapse: 1, duration: peak, ease: 'power3.in' }, 0);
+  tl.call(() => { seedHomes(); items.forEach(it => { it.spin.set((rand()-.5)*9, (rand()-.5)*9, (rand()-.5)*5); }); }, null, peak);
+  tl.to(fxState, { collapse: 0, duration: D * .75, ease: 'silk' }, peak);
+  tl.to(fxState, { hue: `+=${.3 + i*.07}`, duration: D*.4, ease: 'power2.inOut' }, peak - .1);
+  // colours + label swap at the peak of the spin
+  const L = D * .22;
+  tl.add(tweenColor(liquidU.uLA.value, s.la, L), peak - L/2);
+  tl.add(tweenColor(liquidU.uLB.value, s.lb, L), peak - L/2);
+  tl.add(tweenColor(shared.uAccent.value, s.accent, D*.5), peak - L/2);
+  tl.add(tweenColor(shared.uGlow.value, s.glow, D*.5), peak - L/2);
+  tl.add(tweenColor(shared.uDeep.value, s.deep, D*.5), peak - L/2);
+  tl.call(() => { drawLabel(s); applyScentDOM(s); }, null, peak);
+  return tl;
+}
+
+function setScent(i, ox = .5, oy = .5) {
+  if (i === scentIdx || switching) return;
+  switching = true;
+  const s = SCENTS[i];
+  scentIdx = i;
+  if (RM) {
+    bgU.uA0.value.set(s.bg[0]); bgU.uA1.value.set(s.bg[1]); bgU.uA2.value.set(s.bg[2]); bgU.uGA.value.set(s.glow);
+    [[liquidU.uLA.value, s.la], [liquidU.uLB.value, s.lb], [shared.uAccent.value, s.accent], [shared.uGlow.value, s.glow], [shared.uDeep.value, s.deep]].forEach(([c, h]) => c.set(h));
+    drawLabel(s); applyScentDOM(s); swapScentText(s); switching = false; return;
+  }
+  const tl = buildScentTL(i, ox, oy);
+  tl.eventCallback('onComplete', () => { switching = false; });
+  tl.play();
+  swapScentText(s);
+}
+
+let snSplit;
+function swapScentText(s) {
+  const nameEl = $('.sn-name'), notesEl = $('.sn-notes');
+  if (RM) { nameEl.textContent = s.name; notesEl.textContent = s.notes; return; }
+  const old = snSplit ? snSplit.chars : [];
+  gsap.timeline()
+    .to(old, { yPercent: -110, duration: .45, ease: 'power3.in', stagger: .018 })
+    .to(notesEl, { opacity: 0, y: -8, duration: .3, ease: 'power2.in' }, 0)
+    .add(() => {
+      snSplit && snSplit.revert();
+      nameEl.textContent = s.name; notesEl.textContent = s.notes;
+      snSplit = SplitText.create(nameEl, { type: 'chars' });
+      gsap.from(snSplit.chars, { yPercent: 110, rotate: 6, duration: .9, ease: 'silk', stagger: .025 });
+      gsap.fromTo(notesEl, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .8, ease: 'silk', delay: .15 });
+    });
+}
+
+/* =================================================================== */
+/*  Live site                                                           */
+/* =================================================================== */
+async function initSite() {
+  drawLabel(SCENTS[0]);
+  const hasCursor = !COARSE && !RM;
+  if (hasCursor) document.documentElement.classList.add('has-cursor');
+
+  // ---- pointer ----
+  addEventListener('pointermove', e => {
+    pointer.px = e.clientX; pointer.py = e.clientY;
+    pointer.x = (e.clientX / W) * 2 - 1; pointer.y = -(e.clientY / H) * 2 + 1;
+    pointer.active = true;
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { pointer.active = false; });
+  addEventListener('touchend', () => { pointer.active = false; }, { passive: true });
+
+  // ---- custom cursor: dot is exact, ring trails on a spring and stretches with speed ----
+  const ring = $('.c-ring'), dot = $('.c-dot'), clabel = $('.c-label');
+  const cr = { x: W/2, y: H/2, vx: 0, vy: 0 };
+  if (hasCursor) {
+    $$('[data-cursor]').forEach(el => {
+      el.addEventListener('pointerenter', () => { ring.classList.add('is-big'); clabel.textContent = el.dataset.cursor; });
+      el.addEventListener('pointerleave', () => { ring.classList.remove('is-big'); });
+    });
+  }
+
+  // ---- magnetic elements ----
+  const mags = $$('[data-magnetic]').map(el => ({ el, k: parseFloat(el.dataset.magnetic) || .3, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, inner: el.querySelector('span:last-child') }));
+  if (!RM && !COARSE) {
+    mags.forEach(m => {
+      m.el.addEventListener('pointermove', e => {
+        const r = m.el.getBoundingClientRect();
+        m.tx = (e.clientX - (r.left + r.width/2)) * m.k;
+        m.ty = (e.clientY - (r.top + r.height/2)) * m.k;
+      });
+      m.el.addEventListener('pointerleave', () => { m.tx = 0; m.ty = 0; });
+    });
+  }
+
+  // ---- 3D tilt cards ----
+  const cards = $$('[data-tilt]').map(el => ({ el, rx: 0, ry: 0, vrx: 0, vry: 0, trx: 0, try: 0 }));
+  if (!RM && !COARSE) cards.forEach(c => {
+    c.el.addEventListener('pointermove', e => {
+      const r = c.el.getBoundingClientRect();
+      const u = (e.clientX - r.left) / r.width, v = (e.clientY - r.top) / r.height;
+      c.try = (u - .5) * 16; c.trx = -(v - .5) * 12;
+      c.el.style.setProperty('--mx', u*100 + '%'); c.el.style.setProperty('--my', v*100 + '%');
+    });
+    c.el.addEventListener('pointerleave', () => { c.trx = c.try = 0; });
+  });
+
+  // ---- scent buttons ----
+  $$('[data-scent]').forEach(b => b.addEventListener('click', e => {
+    const ox = e.clientX ? e.clientX / W : .5, oy = e.clientY ? 1 - e.clientY / H : .5;
+    setScent(+b.dataset.scent, ox, oy);
+  }));
+
+  // ---- smooth scroll ----
+  let lenis = null;
+  if (!RM) {
+    lenis = new Lenis({ lerp: .085, wheelMultiplier: .9, touchMultiplier: 1.4 });
+    lenis.on('scroll', ScrollTrigger.update);
+    gsap.ticker.add(time => lenis.raf(time * 1000));
+    lenis.stop();
+    $$('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+      const id = a.getAttribute('href'); if (id.length < 2) return;
+      e.preventDefault(); lenis.scrollTo(id === '#top' ? 0 : id, { duration: 2.2, easing: t => 1 - Math.pow(1 - t, 4) });
+    }));
+  }
+
+  // ---- nav hides on the way down, returns on the way up ----
+  let lastY = 0;
+  ScrollTrigger.create({ start: 0, end: 'max', onUpdate: self => {
+    const y = self.scroll();
+    $('#nav').classList.toggle('is-hidden', y > lastY && y > 200);
+    lastY = y;
+  } });
+
+  // ---- live loop ----
+  let last = performance.now() / 1000;
+  gsap.ticker.add(() => {
+    const now = performance.now() / 1000, dt = now - last; last = now;
+    update(dt, now);
+    render();
+    // cursor spring
+    if (hasCursor) {
+      dot.style.transform = `translate3d(${pointer.px}px,${pointer.py}px,0)`;
+      cr.vx += ((pointer.px - cr.x) * 170 - cr.vx * 19) * dt; cr.vy += ((pointer.py - cr.y) * 170 - cr.vy * 19) * dt;
+      cr.x += cr.vx * dt; cr.y += cr.vy * dt;
+      const sp = Math.min(Math.hypot(cr.vx, cr.vy) / 3000, .45), ang = Math.atan2(cr.vy, cr.vx);
+      ring.style.transform = `translate3d(${cr.x}px,${cr.y}px,0) rotate(${ang}rad) scale(${1 + sp},${1 - sp*.6})`;
+    }
+    for (const m of mags) {
+      m.vx += ((m.tx - m.x) * 140 - m.vx * 13) * dt; m.vy += ((m.ty - m.y) * 140 - m.vy * 13) * dt;
+      m.x += m.vx * dt; m.y += m.vy * dt;
+      if (Math.abs(m.x) + Math.abs(m.y) + Math.abs(m.vx) + Math.abs(m.vy) > .01) {
+        m.el.style.transform = `translate3d(${m.x}px,${m.y}px,0)`;
+        if (m.inner && m.inner !== m.el) m.inner.style.transform = `translate3d(${m.x*.35}px,${m.y*.35}px,0)`;
+      }
+    }
+    for (const c of cards) {
+      c.vrx += ((c.trx - c.rx) * 120 - c.vrx * 14) * dt; c.vry += ((c.try - c.ry) * 120 - c.vry * 14) * dt;
+      c.rx += c.vrx * dt; c.ry += c.vry * dt;
+      c.el.style.transform = `perspective(900px) rotateX(${c.rx}deg) rotateY(${c.ry}deg)`;
+    }
+  });
+
+  // ---- text splits (after the webfonts so line/char metrics are right) ----
+  await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
+  const heroSplit = SplitText.create('.hero-title', { type: 'chars', mask: 'chars' });
+  const plSplit = SplitText.create('.pl-word', { type: 'chars', mask: 'chars' });
+  snSplit = SplitText.create('.sn-name', { type: 'chars' });
+
+  buildScroll(lenis);
+  runIntro(heroSplit, plSplit, lenis);
+}
+
+/* ---------- preloader → hero reveal ---------- */
+function runIntro(heroSplit, plSplit, lenis) {
+  const pre = $('#preloader');
+  const heroBits = ['.hero-kicker', '.hero-left', '.scroll-cue', '.scent-ui', '.nav', '.depth'];
+  const finish = () => {
+    document.body.classList.remove('is-loading');
+    pre.remove();
+    lenis && lenis.start();
+    ScrollTrigger.refresh();
+  };
+  if (RM) {
+    gsap.set([bgU.uIntro, dust.material.uniforms.uIntro, bokeh.material.uniforms.uIntro], { value: 1 });
+    Object.assign(intro, { y: 0, spin: 0, swarm: 0, p: 1 });
+    gsap.to(pre, { opacity: 0, duration: .6, onComplete: finish });
+    return;
+  }
+  gsap.set(heroSplit.chars, { yPercent: 115 });
+  gsap.set(heroBits, { opacity: 0, y: 24 });
+  gsap.set(plSplit.chars, { yPercent: 110 });
+  const hole = { r: 0 };
+  const counter = { v: 0 }, cEl = $('.pl-count'), bar = $('.pl-bar i');
+  const ready = Promise.all([document.fonts.ready, new Promise(r => setTimeout(r, 400))]);
+  const tl = gsap.timeline();
+  tl.to(plSplit.chars, { yPercent: 0, duration: 1.1, ease: 'silk', stagger: .07 }, .1)
+    .to(counter, { v: 100, duration: 2.2, ease: 'tide', onUpdate: () => { cEl.textContent = String(Math.round(counter.v)).padStart(3, '0'); bar.style.transform = `scaleX(${counter.v/100})`; } }, .2)
+    .add(() => { tl.pause(); ready.then(() => { drawLabel(SCENTS[scentIdx]); tl.resume(); }); })
+    .to(plSplit.chars, { yPercent: -110, duration: .7, ease: 'power3.in', stagger: .04 })
+    .to(['.pl-meta', '.pl-bar'], { opacity: 0, duration: .4, ease: 'power2.in' }, '<')
+    .addLabel('open', '-=.1')
+    .fromTo(hole, { r: 0 }, { r: Math.hypot(innerWidth, innerHeight) * .6, duration: 1.8, ease: 'tide', onUpdate: () => pre.style.setProperty('--r', hole.r + 'px') }, 'open')
+    .to(bgU.uIntro, { value: 1, duration: 1.6, ease: 'power2.out' }, 'open')
+    .to([dust.material.uniforms.uIntro, bokeh.material.uniforms.uIntro], { value: 1, duration: 2, ease: 'power2.out' }, 'open+=.3')
+    .to(intro, { y: 0, duration: 2.4, ease: 'silk' }, 'open')
+    .to(intro, { spin: 0, duration: 2.6, ease: 'silk' }, 'open')
+    .to(intro, { p: 1, duration: .01 }, 'open+=.35')
+    .to(intro, { swarm: 0, duration: 2.2, ease: 'silk' }, 'open+=.35')
+    .to(heroSplit.chars, { yPercent: 0, duration: 1.6, ease: 'silk', stagger: .075 }, 'open+=.45')
+    .to(heroBits, { opacity: 1, y: 0, duration: 1.2, ease: 'silk', stagger: .08, onComplete: finish }, 'open+=1.0');
+}
+
+/* ---------- scroll storytelling ---------- */
+function buildScroll(lenis) {
+  const mob = MOBILE;
+  const pr = (x, y, s, ry, rx, spread, ps) => ({ x, y, s, ry, rx, camZ: 10, spread, ps });
+  const TAU = Math.PI * 2;
+  const P = {
+    hero:    pr(0,                 mob ? -.04 : -.02, mob ? .76 : 1,   0,          0,   1,   mob ? .8 : 1),
+    man:     pr(mob ? .42 : .6,    mob ? -.5 : .02,   mob ? .45 : .78, .9,         .12, .42, .7),
+    man2:    pr(mob ? .42 : .58,   mob ? -.55 : -.04, mob ? .45 : .78, 1.8,        .05, .42, .7),
+    notes0:  pr(mob ? 0 : -.45,    mob ? .32 : 0,     mob ? .55 : .95, 2.4,        0,   .5,  .75),
+    notes1:  pr(mob ? 0 : -.45,    mob ? .32 : 0,     mob ? .55 : .95, 2.4 + TAU,  0,   .5,  .75),
+    sunk:    pr(mob ? 0 : -.2,     -2.4,              .6,              2.4 + TAU*1.3, .3, .6, .4),
+    reserve: pr(mob ? .45 : .22,   mob ? .2 : -.02,   mob ? .45 : .82, 2.4 + TAU*2, 0, .55, .75),
+  };
+  Object.assign(stage, P.hero);
+  const seg = (trigger, start, end, from, to) => segs.push({ st: ScrollTrigger.create({ trigger, start, end }), from, to, p: 0 });
+
+  // depth meter + background darkening
+  const dn = $('.depth-n'), dtick = $('.depth-scale i');
+  ScrollTrigger.create({ start: 0, end: 'max', onUpdate: self => {
+    const p = self.progress;
+    dn.textContent = String(Math.round(p * 1200)).padStart(4, '0') + ' m';
+    dtick.style.transform = `translateY(${p * 119}px)`;
+    gsap.to(bgU.uDepth, { value: Math.min(p * 1.15, .85), duration: .6, overwrite: true });
+  } });
+
+  if (RM) {
+    $$('.big-copy .word, .big-copy').forEach(el => el.style.opacity = 1);
+    $$('.note').forEach((n, i) => { n.style.visibility = 'visible'; n.style.position = 'relative'; n.style.transform = 'none'; n.style.top = 'auto'; n.style.right = 'auto'; n.style.marginTop = '40px'; });
+    $('.notes').style.height = 'auto'; $('.notes-inner').style.position = 'relative';
+    $('.collection').style.height = 'auto'; $('.h-track').style.cssText = 'position:relative;flex-wrap:wrap;padding:15vh var(--pad)';
+    $('.dive').style.display = 'none';
+    stage.x = mob ? 0 : .55; stage.s = .7;
+    $$('.stat-n').forEach(el => el.textContent = el.dataset.count);
+    return;
+  }
+
+  // 1 · hero → manifesto
+  seg('#manifesto', 'top bottom', 'top top', P.hero, P.man);
+  gsap.to('.hero-title', { yPercent: -30, opacity: .2, ease: 'none', scrollTrigger: { trigger: '#manifesto', start: 'top bottom', end: 'top top', scrub: true } });
+  gsap.to('.hero-bottom, .hero-kicker', { y: -80, opacity: 0, ease: 'none', scrollTrigger: { trigger: '#manifesto', start: 'top 95%', end: 'top 40%', scrub: true } });
+
+  // 2 · manifesto pinned, words light up as you scroll
+  const words = SplitText.create('.big-copy', { type: 'words', wordsClass: 'word' }).words;
+  gsap.to(words, { opacity: 1, stagger: .1, ease: 'none', scrollTrigger: { trigger: '#manifesto', start: 'top top', end: '+=120%', scrub: .6, pin: true } });
+  seg('#manifesto', 'top top', '+=120%', P.man, P.man2);
+
+  // 3 · notes: pinned, the bottle turns a full revolution, three notes hand off through masks
+  seg('#notes', 'top bottom', 'top top', P.man2, P.notes0);
+  const notes = $$('.note');
+  const nt = gsap.timeline({ scrollTrigger: { trigger: '#notes', start: 'top top', end: '+=300%', scrub: .8, pin: true } });
+  seg('#notes', 'top top', '+=300%', P.notes0, P.notes1);
+  const prog = $$('.notes-progress i'), countEl = $('.notes-count');
+  notes.forEach((n, i) => {
+    const title = n.querySelector('.note-title');
+    const rest = [n.querySelector('.note-num'), n.querySelector('p'), n.querySelector('.note-tier')];
+    const at = i * 1;
+    nt.set(n, { visibility: 'visible' }, at)
+      .fromTo(title, { clipPath: 'inset(0 0 100% 0)', yPercent: 30 }, { clipPath: 'inset(0 0 0% 0)', yPercent: 0, duration: .35, ease: 'power3.out' }, at)
+      .fromTo(rest, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .3, stagger: .05, ease: 'power3.out' }, at + .06)
+      .fromTo(prog[i], { scaleX: 0 }, { scaleX: 1, duration: 1, ease: 'none' }, at)
+      .call(() => { countEl.textContent = `0${i+1} / 03`; }, null, at + .01);
+    if (i < notes.length - 1) {
+      nt.to(title, { clipPath: 'inset(100% 0 0 0)', yPercent: -30, duration: .3, ease: 'power3.in' }, at + .78)
+        .to(rest, { opacity: 0, y: -24, duration: .25, ease: 'power2.in' }, at + .78)
+        .set(n, { visibility: 'hidden' }, at + 1);
+    }
+  });
+  gsap.fromTo('.notes-big', { xPercent: -10 }, { xPercent: 15, ease: 'none', scrollTrigger: { trigger: '#notes', start: 'top top', end: '+=300%', scrub: true } });
+
+  // 4 · collection: the bottle sinks away, cards slide in horizontally
+  seg('#collection', 'top bottom', 'top top', P.notes1, P.sunk);
+  const track = $('.h-track');
+  const dist = () => track.scrollWidth - innerWidth;
+  const hz = gsap.to(track, { x: () => -dist(), ease: 'none', scrollTrigger: { trigger: '#collection', start: 'top top', end: () => '+=' + dist(), scrub: 1, pin: true, invalidateOnRefresh: true } });
+  $$('.card').forEach(c => gsap.fromTo(c, { rotateZ: 4, y: 60 }, { rotateZ: 0, y: 0, ease: 'none', scrollTrigger: { trigger: c, containerAnimation: hz, start: 'left right', end: 'left 40%', scrub: true } }));
+
+  // 5 · dive: zoom through the word DEEP into the next scene
+  const diveTL = gsap.timeline({ scrollTrigger: { trigger: '#ritual', start: 'top top', end: '+=120%', scrub: 1, pin: true } });
+  diveTL.fromTo('#diveText', { scale: 1, transformOrigin: '50% 50%' }, { scale: 26, ease: 'power3.in', duration: 1 }, 0)
+        .to('#diveInk', { opacity: 0, duration: .25, ease: 'none' }, .75)
+        .to('.dive-kicker', { opacity: 0, y: -40, duration: .2 }, 0)
+        .fromTo('#fx', { opacity: .35 }, { opacity: 1, duration: .3, ease: 'none', immediateRender: false }, .7);
+  ScrollTrigger.create({ trigger: '#ritual', start: 'top 70%', onEnter: () => gsap.to('#fx', { opacity: .35, duration: .6 }), onLeaveBack: () => gsap.to('#fx', { opacity: 1, duration: .6 }) });
+  gsap.set('#diveText', { svgOrigin: '800 430' });
+
+  // 6 · ritual: counters and layered parallax
+  $$('.stat').forEach(st => {
+    gsap.fromTo(st, { y: 120 }, { y: +st.dataset.speed * -2, ease: 'none', scrollTrigger: { trigger: st, start: 'top bottom', end: 'bottom top', scrub: true } });
+    const n = st.querySelector('.stat-n'), to = +n.dataset.count, o = { v: 0 };
+    ScrollTrigger.create({ trigger: st, start: 'top 80%', once: true, onEnter: () => gsap.to(o, { v: to, duration: 2.2, ease: 'silk', onUpdate: () => n.textContent = Math.round(o.v).toLocaleString('en-US') }) });
+  });
+  $$('.mq-row').forEach(r => gsap.fromTo(r, { xPercent: r.dataset.dir > 0 ? -30 : 0 }, { xPercent: r.dataset.dir > 0 ? 0 : -30, ease: 'none', scrollTrigger: { trigger: '.marquee', start: 'top bottom', end: 'bottom top', scrub: true } }));
+
+  // 7 · reserve: bottle rises back, headline reveals
+  seg('#reserve', 'top bottom', 'top 20%', P.sunk, P.reserve);
+  const rs = SplitText.create('.reserve-title', { type: 'lines,chars', mask: 'lines' });
+  gsap.from(rs.chars, { yPercent: 110, duration: 1.4, ease: 'silk', stagger: .025, scrollTrigger: { trigger: '.reserve', start: 'top 55%' } });
+
+  // section eyebrows / headings reveal
+  $$('.h2').forEach(h => { const sp = SplitText.create(h, { type: 'lines', mask: 'lines' }); gsap.from(sp.lines, { yPercent: 100, duration: 1.3, ease: 'silk', stagger: .1, scrollTrigger: { trigger: h, start: 'top 85%' } }); });
+}
+
+/* =================================================================== */
+/*  Ad mode (index.html?ad=1): 1080×1920, scripted, frame-exact         */
+/* =================================================================== */
+function initAd() {
+  resize();
+  drawLabel(SCENTS[0]);
+  const root = $('#ad');
+  const wa = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.6 1.1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z"/></svg>';
+  const split = w => [...w].map(c => `<span class="ch"><b>${c}</b></span>`).join('');
+  root.innerHTML = `
+    <div class="ad-layer ad-title" id="adTitle">${split('MAREA')}</div>
+    <div class="ad-layer ad-top" id="adTop">
+      <div class="ad-ui" id="adUI"><span class="n">N°02 — Salt Vetiver</span><span class="t"><em>Bottled</em> from the deep.</span></div>
+      <div class="ad-cursor" id="adCursor"><div class="r"></div><div class="d"></div></div>
+      <div class="ad-nav" id="adNav"><span class="b"><i></i>MAREA</span><span class="p">Reserve</span></div>
+      <div class="ad-note" id="adNote"><div class="k">02 — Heart</div><div class="h"><span><b>Night-blooming</b></span><span><b><em>cereus</em></b></span></div></div>
+      <div class="ad-bar t" id="barT"></div><div class="ad-bar b" id="barB"></div>
+    </div>
+    <div class="ad-layer ad-cards" id="adCards">
+      <div class="eb">(03) — The collection</div>
+      <div class="hh">Three depths. <em>One sea.</em></div>
+      <div class="ad-track" id="adTrack">
+        <article class="card" style="--c1:#3fe8ff;--c2:#7a4dff"><div class="card-meta"><span>N°01</span><span>50 ML · TT$ 890</span></div><div class="orb"><i></i><i></i><i></i></div><h3>Nocturne</h3><p>Night cereus, sea salt, vetiver.</p><span class="card-cta">Wear N°01 →</span></article>
+        <article class="card" style="--c1:#7dffd8;--c2:#1aa0c8"><div class="card-meta"><span>N°02</span><span>50 ML · TT$ 890</span></div><div class="orb"><i></i><i></i><i></i></div><h3>Salt Vetiver</h3><p>Sea spray, vetiver root, driftwood.</p><span class="card-cta">Wear N°02 →</span></article>
+        <article class="card" style="--c1:#ffc46b;--c2:#ff4f6d"><div class="card-meta"><span>N°03</span><span>50 ML · TT$ 940</span></div><div class="orb"><i></i><i></i><i></i></div><h3>Ember Tide</h3><p>Grey ambergris, tonka, smoked salt.</p><span class="card-cta">Wear N°03 →</span></article>
+      </div>
+    </div>
+    <div class="ad-layer ad-deep" id="adDeep">
+      <svg viewBox="0 0 1080 1920"><defs><mask id="adDeepMask" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920"><rect x="-3000" y="-3000" width="7080" height="7920" fill="#fff"/><g id="adDeepText"><text x="540" y="1080" text-anchor="middle" font-family="Bodoni Moda, serif" font-size="330" letter-spacing="-10" fill="#000">DEEP</text></g></mask></defs>
+      <rect id="adDeepInk" x="-3000" y="-3000" width="7080" height="7920" fill="#05040c" mask="url(#adDeepMask)"/></svg>
+      <div class="k" id="adDeepK">Into the</div>
+    </div>
+    <div class="ad-layer ad-cap-layer"><div class="ad-caption" id="adCap">Your loss lil bro</div></div>
+    <div class="ad-layer tpl" id="tpl">
+      <div class="tpl-inner" id="tplInner">
+        <div class="tpl-head"><span>PERFUME CO.</span><span class="tpl-burger"></span></div>
+        <div class="tpl-scroll" id="tplScroll">
+          <div class="tpl-hero"><svg viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="1.2"><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="9" cy="10" r="2"/><path d="M3 18l6-5 4 3 3-2 5 4"/></svg></div>
+          <h1>Welcome to Our Website</h1>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. We sell the best perfumes at great prices.</p>
+          <span class="tpl-btn">Shop Now</span>
+          <div class="tpl-grid"><div>Product 1 — $50.00</div><div>Product 2 — $50.00</div><div>Product 3 — $50.00</div><div>Product 4 — $50.00</div></div>
+        </div>
+      </div>
+      <div class="dm">
+        <div class="dm-row me"><div class="dm-b">Can my perfume brand get a site that actually moves?</div></div>
+        <div class="dm-read"><b>Read</b> 10:52 PM</div>
+        <div class="dm-row"><div class="dm-b">Unfortunately animated 3D websites are only for big brands.</div></div>
+        <div class="dm-row"><div class="dm-b">Thanks for reaching out but we can't take this on. Good luck!</div></div>
+      </div>
+    </div>
+    <div class="ad-layer endcard" id="end">
+      <div class="ec-mark" id="ecMark"></div>
+      <div class="ec-word" id="ecWord">${split('MAREA')}</div>
+      <div class="ec-tag" id="ecTag">Bottled from the deep.</div>
+      <div class="ec-by" id="ecBy">Concept build by Portside Digital</div>
+      <div class="ec-cta" id="ecCta">${wa}<span>868-259-1409</span></div>
+    </div>`;
+
+  // beat map — reference/beats.json. The reel's music is 8.1 s; the ad loops its drop phrase
+  // [p1, p2) (first drop → second drop, cut just before each transient) `loops` more times, so every
+  // repeat opens on a drop hit. Anything after p2 in the original shifts by loops × L.
+  const M = { p1: 3.5556, p2: 6.0227, loops: 3, src: 8.102 };
+  const L = M.p2 - M.p1, SH = M.loops * L;
+  // looped drops hit ~15 ms after each seam (measured on the export); every cut snaps to the nearest frame
+  const blk = k => k ? M.p1 + k * L + .015 : 3.587;
+  const snap = t => Math.round(t * 30) / 30 - .001;
+  const T0 = {
+    drop: blk(0), cut2: blk(0) + 1.533,                           // orig 3.587 / 5.12
+    b1: blk(1), b1c: blk(1) + 1.533,
+    b2: blk(2), b2c: blk(2) + 1.533,
+    b3: blk(3), b3c: blk(3) + 1.533,
+    drop2: 6.049 + SH, end: 6.978 + SH, hit1: 7.43 + SH, hit2: 7.581 + SH,
+  };
+  const T = Object.fromEntries(Object.entries(T0).map(([k, v]) => [k, snap(v)]));
+  T.len = Math.round((M.src + SH) * 30) / 30;
+  const sub = [.465, .929, 1.382];                                // strong hits inside every block
+  const grain = $('.grain');
+  const tl = gsap.timeline({ paused: true });
+  const show = (sel, on, at) => tl.set(sel, { autoAlpha: on ? 1 : 0 }, at);
+  const cutTo = (at, st) => tl.set(stage, { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1, ...st }, at);
+  const pulse = (at, v = .9) => tl.fromTo(fxState, { surge: v }, { surge: 0, duration: .4, ease: 'power2.out', immediateRender: false }, at);
+
+  // initial state
+  gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep'], { autoAlpha: 0 });
+  gsap.set('#tpl', { autoAlpha: 1 });
+  gsap.set('#adTitle .ch b, #ecWord .ch b', { yPercent: 115 });
+  gsap.set(['#ecMark', '#ecTag', '#ecBy', '#ecCta'], { opacity: 0 });
+  Object.assign(stage, { x: 0, y: -.06, s: .82, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1 });
+  Object.assign(intro, { y: -4.5, spin: -Math.PI*2, swarm: 1, p: 0 });
+  fxState.collapse = 0;
+
+  // ── 0 → drop: bland template + rejection DM, faux handheld drift ──
+  const shake = { t: 0 };
+  tl.to(shake, { t: T.drop, duration: T.drop, ease: 'none', onUpdate() {
+    const t = shake.t;
+    const n = (a, b) => Math.sin(t*a) * .6 + Math.sin(t*b + 1.3) * .4;
+    $('#tplInner').style.transform = `translate(${n(1.7, 3.1)*10}px,${n(2.3, 1.1)*12}px) rotate(${n(1.3, 2.9)*.5}deg) scale(1.03)`;
+    $('#tplScroll').style.transform = `translateY(${-gsap.parseEase('power1.inOut')(Math.min(t/3.4, 1)) * 520}px)`;
+  } }, 0);
+
+  // ── drop: hard cut, letterbox, bottle rises, MAREA reveals ──
+  show('#tpl', false, T.drop); show(['#adTitle', '#adTop', '#adCap', '#barT', '#barB'], true, T.drop);
+  tl.set(intro, { p: 1 }, T.drop);
+  tl.fromTo(intro, { y: -2.6 }, { y: 0, duration: 1.3, ease: 'silk' }, T.drop)
+    .fromTo(intro, { spin: -Math.PI*1.2 }, { spin: 0, duration: 1.45, ease: 'silk' }, T.drop)
+    .fromTo(intro, { swarm: 1 }, { swarm: 0, duration: 1.3, ease: 'silk' }, T.drop + .05)
+    .to('#adTitle .ch b', { yPercent: 0, duration: .9, ease: 'silk', stagger: .06 }, T.drop + .04);
+  sub.forEach(o => pulse(T.drop + o));
+  tl.fromTo(stage, { camZ: 10.6 }, { camZ: 9.6, duration: T.cut2 - T.drop, ease: 'none', immediateRender: false }, T.drop);
+
+  // ── full frame, close: switch → N°02 spins through the block's big hit ──
+  show(['#barT', '#barB', '#adTitle'], false, T.cut2); show('#adNav', true, T.cut2);
+  cutTo(T.cut2, { camZ: 7.6, y: .02 });
+  tl.add(buildScentTL(1, .5, .52, 1.62).paused(false), T.cut2);
+  tl.to(stage, { camZ: 8.3, duration: T.b1 - T.cut2, ease: 'none' }, T.cut2);
+
+  // ── block 1 drop: wide, a cursor sweeps through and scatters the swarm ──
+  cutTo(T.b1, { camZ: 12.5, y: .1, x: -.12, ry: 1.05, rx: .18 });
+  pulse(T.b1, 1); sub.forEach(o => pulse(T.b1 + o, .6));
+  show(['#adCursor', '#adUI'], true, T.b1);
+  const cur = { x: 120, y: 760 };
+  const placeCursor = () => {
+    pointer.px = cur.x; pointer.py = cur.y;
+    pointer.x = cur.x / 1080 * 2 - 1; pointer.y = -(cur.y / 1920) * 2 + 1;
+    $('#adCursor').style.transform = `translate(${cur.x}px,${cur.y}px)`;
+  };
+  tl.set(pointer, { active: true }, T.b1);
+  tl.fromTo(cur, { x: 80, y: 700 }, { x: 980, y: 1120, duration: .62, ease: 'power2.inOut', onUpdate: placeCursor, immediateRender: false }, T.b1 + .04)
+    .to(cur, { x: 180, y: 1350, duration: .55, ease: 'power2.inOut', onUpdate: placeCursor }, T.b1 + .7)
+    .to(cur, { x: 700, y: 880, duration: .3, ease: 'power3.out', onUpdate: placeCursor }, T.b1 + 1.25);
+  tl.to(stage, { camZ: 10.6, ry: .7, duration: T.b1c - T.b1, ease: 'power1.in' }, T.b1);
+
+  // ── notes: "Night-blooming cereus" reveals while the bottle turns ──
+  tl.set(pointer, { active: false }, T.b1c);
+  show(['#adCursor', '#adUI'], false, T.b1c); show('#adNote', true, T.b1c);
+  cutTo(T.b1c, { camZ: 10, y: -.3, x: .12, s: .78, ry: -.6, spread: .55, ps: .7 });
+  tl.fromTo('#adNote .h b', { yPercent: 110 }, { yPercent: 0, duration: .7, ease: 'silk', stagger: .08, immediateRender: false }, T.b1c)
+    .fromTo('#adNote .k', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.b1c + .05)
+    .to(stage, { ry: .9, duration: T.b2 - T.b1c, ease: 'power2.inOut' }, T.b1c);
+  pulse(T.b1c + .313);
+
+  // ── block 2 drop: the collection slides across ──
+  show(['#adNote', '#adNav'], false, T.b2); show('#adCards', true, T.b2);
+  cutTo(T.b2, { y: -3, ps: 0 });
+  tl.fromTo('#adTrack', { x: 560 }, { x: -1200, duration: T.b2c - T.b2, ease: 'power2.inOut', immediateRender: false }, T.b2)
+    .fromTo('#adCards .hh, #adCards .eb', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', stagger: .06, immediateRender: false }, T.b2);
+
+  // ── switch → N°03 Ember; the spin peaks on the block's big hit ──
+  show('#adCards', false, T.b2c); show('#adNav', true, T.b2c);
+  cutTo(T.b2c, { camZ: 7.9, y: .02 });
+  tl.add(buildScentTL(2, .5, .3, 1.62).paused(false), T.b2c);
+  tl.to(stage, { camZ: 8.6, duration: T.b3 - T.b2c, ease: 'none' }, T.b2c);
+
+  // ── block 3 drop: zoom through DEEP ──
+  show('#adNav', false, T.b3); show('#adDeep', true, T.b3);
+  cutTo(T.b3, { camZ: 9.5, y: -.02, s: .9 });
+  // zoom into the thick stem of the second E so the frame fills with the scene, never with ink
+  tl.call(() => { const b = $('#adDeepText text').getExtentOfChar(2); gsap.set('#adDeepText', { svgOrigin: `${b.x + b.width*.14} ${b.y + b.height*.62}`, scale: 1 }); }, null, T.b3);
+  tl.set(['#adDeepInk', '#adDeepK'], { opacity: 1 }, T.b3);
+  tl.to('#adDeepText', { scale: 40, duration: T.b3c - T.b3, ease: 'power3.in' }, T.b3)
+    .to('#adDeepK', { opacity: 0, y: -40, duration: .4, ease: 'power2.in' }, T.b3 + .5)
+    .to('#adDeepInk', { opacity: 0, duration: .45, ease: "power1.in" }, T.b3c - .45);
+
+  // ── push-in on the Ember bottle, then a fast switch back to N°01 that bursts on the second drop ──
+  show('#adDeep', false, T.b3c); show('#adNav', true, T.b3c);
+  cutTo(T.b3c, { camZ: 9.2, y: 0, ry: -.3 });
+  tl.to(stage, { camZ: 7.4, ry: .2, duration: T.drop2 - T.b3c, ease: 'power2.in' }, T.b3c);
+  tl.add(buildScentTL(0, .5, .5, 2.4).paused(false), T.drop2 - .25);
+  cutTo(T.drop2, { camZ: 11.5, y: .02, rx: .1 });
+  pulse(T.drop2, 1);
+  tl.to(stage, { camZ: 10.2, duration: T.end - T.drop2, ease: 'power1.out' }, T.drop2);
+
+  // ── end card: brand + CTA; credit and CTA on the last two hits ──
+  show(['#adTop', '#adNav', '#adCap'], false, T.end);
+  tl.fromTo('#end', { autoAlpha: 0 }, { autoAlpha: 1, duration: .06, ease: 'none', immediateRender: false }, T.end)
+    .fromTo('#ecMark', { scale: .2, opacity: 0 }, { scale: 1, opacity: 1, duration: .5, ease: 'surge', immediateRender: false }, T.end)
+    .to('#ecWord .ch b', { yPercent: 0, duration: .6, ease: 'silk', stagger: .045 }, T.end + .02)
+    .fromTo('#ecTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.end + .2)
+    .fromTo('#ecBy', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .4, ease: 'silk', immediateRender: false }, T.hit1)
+    .fromTo('#ecCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .45, ease: 'surge', immediateRender: false }, T.hit2)
+    .fromTo('#ecMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit1)
+    .fromTo('#ecMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit2);
+  tl.set({}, {}, T.len);
+
+  let frameNo = 0;
+  window.__ad = {
+    duration: T.len, fps: 30, cuts: T, music: M,
+    async ready() { await document.fonts.ready; drawLabel(SCENTS[0]); return true; },
+    // render frame i at exactly i/fps — physics step is fixed so every render is identical
+    frame(i) {
+      const fps = 30, t = i / fps;
+      // step physics from the previous frame (frames are always requested in order)
+      tl.seek(t, false);
+      update(1 / fps, t + 2);
+      render();
+      grain.style.transform = `translate(${((i*37)%13 - 6)}%,${((i*53)%17 - 8)}%)`;
+      frameNo = i;
+      return t;
+    },
+  };
+  // warm-up: settle springs before frame 0
+  for (let k = 0; k < 30; k++) update(1/30, k/30);
+  tl.seek(0); update(1/30, 2); render();
+  document.body.classList.remove('is-loading');
+  document.body.dataset.adReady = '1';
+}
+
+/* =================================================================== */
+if (AD) initAd(); else initSite();
+</script>
+</body>
+</html>

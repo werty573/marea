@@ -1,0 +1,6 @@
+# source reel (not ours to redistribute)
+reference/reel.mp4
+reference/audio.wav
+# build artefacts
+ad/frames/
+node_modules/
