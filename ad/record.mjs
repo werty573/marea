@@ -7,7 +7,7 @@
 // 2. Live-site clips: the real MAREA site (phone layout, scrolling) and the soda can site, recorded with
 //    Playwright's fake clock (1/30 s per frame) and spliced into the slots the base timeline leaves black.
 // 3. The caption is rendered once as a transparent PNG and laid over the spliced clips (the base draws its own).
-// 4. Music: the reference reel's audio, with one intro phrase repeated and the drop phrase looped
+// 4. Music: the reference reel's audio, intro time-stretched (no repeats) and the drop phrase looped
 //    (sample-accurate cuts just before onsets, 4 ms seam fades), muxed from t = 0.
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
@@ -128,9 +128,12 @@ if (onlyFrames) process.exit(0);
 /* ---------- 5. music ---------- */
 const M = AD.music, music = path.join(adDir, 'music.m4a');
 const sr = 44100, S = t => Math.round(t * sr), fade = .004, segs = M.segs;
-const parts = segs.map(([a, b], i) =>
+// a third value stretches that segment to the given length (rubberband: tempo only, pitch unchanged),
+// then trims/pads to the exact sample count so nothing after it drifts
+const parts = segs.map(([a, b, len], i) =>
   `[s${i}]atrim=start_sample=${S(a)}:end_sample=${S(b)},asetpts=PTS-STARTPTS` +
-  (i ? `,afade=t=in:d=${fade}` : '') + (i < segs.length - 1 ? `,afade=t=out:st=${(b - a - fade).toFixed(4)}:d=${fade}` : '') + `[p${i}]`);
+  (len ? `,rubberband=tempo=${((b - a) / len).toFixed(6)}:transients=mixed:pitchq=quality:channels=together,atrim=end_sample=${S(len)},apad=whole_len=${S(len)}` : '') +
+  (i ? `,afade=t=in:d=${fade}` : '') + (i < segs.length - 1 ? `,afade=t=out:st=${((len || b - a) - fade).toFixed(4)}:d=${fade}` : '') + `[p${i}]`);
 const graph = `[0:a]aresample=${sr},asplit=${segs.length}${segs.map((_, i) => `[s${i}]`).join('')};` +
   parts.join(';') + ';' + segs.map((_, i) => `[p${i}]`).join('') + `concat=n=${segs.length}:v=0:a=1[out]`;
 ff('-i', path.join(root, 'reference/reel.mp4'), '-filter_complex', graph, '-map', '[out]', '-c:a', 'aac', '-b:a', '192k', '-t', String(duration), music);

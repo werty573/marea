@@ -210,10 +210,6 @@
   "fps": 30,
   "music": {
    "source_length": 8.102,
-   "intro_repeat": [
-    0.5457,
-    2.1159
-   ],
    "loop": [
     3.5556,
     6.0227
@@ -222,14 +218,11 @@
    "segments": [
     [
      0,
-     2.1159
+     3.5556,
+     5.1258
     ],
     [
-     0.5457,
-     2.1159
-    ],
-    [
-     2.1159,
+     3.5556,
      6.0227
     ],
     [
@@ -257,7 +250,16 @@
      8.102
     ]
    ],
-   "note": "repeat one intro phrase (+1.5702 s) so the DM hook runs ~5 s, then loop the drop phrase; original times after 6.0227 shift by +13.9057 s"
+   "note": "intro time-stretched by +1.5702 s (no repeated material) so the DM hook runs ~5 s, then the drop phrase loops; original times after 6.0227 shift by +13.9057 s",
+   "intro_stretch": {
+    "from": [
+     0,
+     3.5556
+    ],
+    "to_length": 5.1258,
+    "tempo": 0.693667,
+    "method": "ffmpeg rubberband, pitch preserved"
+   }
   },
   "shots": [
    {

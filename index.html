@@ -1570,12 +1570,12 @@ function initAd() {
       <div class="ec-cta" id="pdCta">${wa}<span>868-259-1409</span></div>
     </div>`;
 
-  // beat map — reference/beats.json. The reel's music is 8.1 s. The ad (1) repeats one intro phrase
-  // [0.5457, 2.1159) so the DM hook gets ~5 s, then (2) loops the drop phrase [p1, p2) `loops` more times.
-  // Every seam sits just before an onset; anything after a seam shifts by the inserted length.
-  const M = { p1: 3.5556, p2: 6.0227, loops: 5, src: 8.102, i1: .5457, i2: 2.1159 };
-  const E = M.i2 - M.i1, L = M.p2 - M.p1, SH = E + M.loops * L;
-  M.segs = [[0, M.i2], [M.i1, M.i2], [M.i2, M.p2], ...Array(M.loops).fill([M.p1, M.p2]), [M.p2, M.src]];
+  // beat map — reference/beats.json. The reel's music is 8.1 s. The ad (1) time-stretches the intro
+  // [0, p1) by E seconds (pitch kept) so the DM hook gets ~5 s with no repeated material, then (2) loops the
+  // drop phrase [p1, p2) `loops` more times. Seams sit just before onsets; later times shift accordingly.
+  const M = { p1: 3.5556, p2: 6.0227, loops: 5, src: 8.102 };
+  const E = 1.5702, L = M.p2 - M.p1, SH = E + M.loops * L;
+  M.segs = [[0, M.p1, M.p1 + E], [M.p1, M.p2], ...Array(M.loops).fill([M.p1, M.p2]), [M.p2, M.src]];   // [from, to, stretchedLength?]
   // looped drops hit ~15 ms after each seam (measured on the export); every cut snaps to the nearest frame
   const blk = k => k ? M.p1 + E + k * L + .015 : 3.587 + E;
   const snap = t => Math.round(t * 30) / 30 - .001;
