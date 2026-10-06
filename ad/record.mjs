@@ -1,6 +1,7 @@
 // Records a Reel and exports it:
 //   node ad/record.mjs [1|2|3]          → ad 1: ad/ad.mp4 · ad 2: ad/ad2.mp4 · ad 3: ad/ad3.mp4 (+ -silent versions)
 //   node ad/record.mjs 2 --frames       → frames only (ad/frames/ad2/final), no encode
+//   node ad/record.mjs 2 --reuse        → keep already-recorded site clips
 //
 // 1. Base: index.html?ad=1 (1080×1920) — DM hook, MAREA shots, end card. Frame i is rendered at exactly
 //    t = i / 30 by seeking a GSAP timeline and stepping fixed-dt physics, so every cut lands on its beat.
@@ -19,13 +20,14 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const N = +(process.argv.find(a => /^[123]$/.test(a)) || 1), sfx = N === 1 ? '' : String(N);
 const adDir = path.join(root, 'ad'), FR = path.join(adDir, 'frames', 'ad' + N);
 const BASE = 'http://localhost:5173';
-const onlyFrames = process.argv.includes('--frames');
+const onlyFrames = process.argv.includes('--frames'), reuse = process.argv.includes('--reuse');
 const ff = (...args) => execFileSync('ffmpeg', ['-v', 'error', '-y', ...args], { stdio: 'inherit' });
 const pad = i => String(i).padStart(4, '0');
 const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const lerp = (a, b, t) => a + (b - a) * t;
 
-fs.rmSync(FR, { recursive: true, force: true });
+// keep recorded site clips with --reuse (handy while tweaking the timeline)
+for (const d of fs.existsSync(FR) ? fs.readdirSync(FR) : []) if (!(reuse && d === 'clips')) fs.rmSync(path.join(FR, d), { recursive: true, force: true });
 const browser = await chromium.launch({ args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const errors = [];
 const watch = (page, tag) => {
@@ -39,9 +41,81 @@ watch(page, 'base');
 await page.goto(`${BASE}/index.html?ad=${N}`, { waitUntil: 'networkidle' });
 await page.waitForSelector('body[data-ad-ready="1"]');
 await page.evaluate(() => window.__ad.ready());
-const AD = await page.evaluate(() => ({ duration: window.__ad.duration, fps: window.__ad.fps, music: window.__ad.music, slots: window.__ad.slots }));
+const AD = await page.evaluate(() => ({ duration: window.__ad.duration, fps: window.__ad.fps, music: window.__ad.music, slots: window.__ad.slots, clips: window.__ad.clips || [], stills: window.__ad.stills || [] }));
 const { duration, fps } = AD, total = Math.round(duration * fps);
 const slots = AD.slots.map(s => ({ ...s, f0: Math.round(s.from * fps), f1: Math.round(s.to * fps) }));
+/* ---------- 1a. clip specs from the ad page: live sites in phone / browser frames ---------- */
+// helpers injected into every recorded page; action expressions use them
+const HELPERS = `window.__c = (s, n = 0) => { const e = document.querySelectorAll(s)[n]; if (!e) return [0, 0]; const r = e.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+window.__lc = (s, n = 0) => { const e = document.querySelectorAll(s)[n]; if (!e) return [0, 0]; const t = e.closest('label') || e.parentElement; const r = t.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+window.__top = s => { const e = document.querySelector(s); return e ? e.getBoundingClientRect().top + scrollY : 0; };`;
+// a visible pointer: an arrow on desktop, a tap ring on phones (it presses while the mouse is down)
+const CURSOR = kind => `(() => { const K = ${JSON.stringify(kind)};
+  const mk = () => { if (document.getElementById('__cur')) return; const c = document.createElement('div'); c.id = '__cur';
+    c.style.cssText = 'position:fixed;left:0;top:0;z-index:2147483647;pointer-events:none;transform:translate(-200px,-200px)';
+    c.innerHTML = K === 'touch'
+      ? '<i style="position:absolute;left:-26px;top:-26px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.32);border:3px solid rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(0,0,0,.35)"></i>'
+      : '<svg width="36" height="42" viewBox="0 0 17 20" style="position:absolute;left:-3px;top:-2px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.45))"><path d="M1 1 L1 16 L5 12.5 L8 19 L10.8 17.8 L7.9 11.4 L13 11.4 Z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+    document.documentElement.appendChild(c);
+    addEventListener('mousemove', e => { c.style.transform = 'translate(' + e.clientX + 'px,' + e.clientY + 'px)'; }, true);
+    addEventListener('mousedown', () => { const i = c.firstElementChild; i.style.scale = K === 'touch' ? '.72' : '.86'; if (K === 'touch') i.style.background = 'rgba(255,255,255,.75)'; }, true);
+    addEventListener('mouseup', () => { const i = c.firstElementChild; i.style.scale = '1'; if (K === 'touch') i.style.background = 'rgba(255,255,255,.32)'; }, true); };
+  if (document.readyState === 'loading') addEventListener('DOMContentLoaded', mk); else mk(); })();`;
+
+async function recordSpec(c) {
+  const dir = path.join(FR, 'clips', c.name);
+  if (reuse && fs.existsSync(path.join(dir, `f_${pad(c.frames - 1)}.jpg`))) return console.log(`${c.name}: reused`);
+  fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
+  const ctx = await browser.newContext({ viewport: { width: c.vp[0], height: c.vp[1] }, deviceScaleFactor: c.dpr, isMobile: !!c.mobile, hasTouch: !!c.mobile });
+  const p = await ctx.newPage(); watch(p, c.name);
+  await p.addInitScript(HELPERS);
+  if (c.cursor) await p.addInitScript(CURSOR(c.cursor));
+  const start = Date.now() + 60000;
+  await p.clock.install({ time: start - 1000 });
+  await p.clock.pauseAt(start);
+  await p.goto(c.url.startsWith('http') ? c.url : BASE + c.url, { waitUntil: 'networkidle', timeout: 90000 });
+  await p.evaluate(() => document.fonts.ready);
+  await p.waitForTimeout(700);
+  await p.clock.runFor(Math.round(c.preroll * 1000));
+  const val = async v => (typeof v === 'string' ? p.evaluate(v) : v);
+  const scrollTo = async y => (c.lenis
+    ? p.evaluate(y => window.__lenis.scrollTo(y, { immediate: true, force: true }), Math.round(y))
+    : p.evaluate(y => window.scrollTo({ top: y, behavior: 'instant' }), Math.round(y)));
+  if (c.prescroll) { await scrollTo(await val(c.prescroll)); await p.clock.runFor(1400); }
+  const A = c.actions || [];
+  const mouseKeys = A.find(a => a.mouse)?.mouse, scrollKeys = A.find(a => a.scroll)?.scroll;
+  const scrollCache = new Map();
+  const interp = async (keys, i, resolve) => {
+    let k = keys.findIndex((x, j) => j === keys.length - 1 || keys[j + 1][0] > i);
+    const a = keys[Math.max(0, Math.min(k, keys.length - 1))], b = keys[Math.min(k + 1, keys.length - 1)];
+    const va = await resolve(a, k), vb = await resolve(b, k + 1);
+    const t = b[0] === a[0] ? 1 : Math.min(Math.max((i - a[0]) / (b[0] - a[0]), 0), 1);
+    return Array.isArray(va) ? [lerp(va[0], vb[0], ease(t)), lerp(va[1], vb[1], ease(t))] : lerp(va, vb, ease(t));
+  };
+  const resolveMouse = async key => (key.length >= 3 ? [key[1], key[2]] : val(key[1]));
+  const resolveScroll = async (key, j) => { if (!scrollCache.has(j)) scrollCache.set(j, await val(key[1])); return scrollCache.get(j); };
+  if (mouseKeys) { const [x, y] = await interp(mouseKeys, 0, resolveMouse); await p.mouse.move(x, y); }
+  for (let i = 0; i < c.frames; i++) {
+    if (scrollKeys && i <= scrollKeys[scrollKeys.length - 1][0] && i >= scrollKeys[0][0]) await scrollTo(await interp(scrollKeys, i, resolveScroll));
+    if (mouseKeys) { const [x, y] = await interp(mouseKeys, i, resolveMouse); await p.mouse.move(x, y); }
+    for (const a of A) {
+      if (a.click === i) await p.mouse.down();
+      if (a.click === i - 3) await p.mouse.up();
+      if (a.type && i >= a.type[0] && i <= a.type[1]) {
+        const [f0, f1, sel, text] = a.type, n = Math.ceil(text.length * (i - f0 + 1) / (f1 - f0 + 1));
+        await p.evaluate(([sel, v]) => { const e = document.querySelector(sel); if (e) { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); } }, [sel, text.slice(0, n)]);
+      }
+      if (a.js && a.js[0] === i) await p.evaluate(a.js[1]);
+    }
+    await p.clock.runFor(1000 / fps);
+    await p.screenshot({ path: path.join(dir, `f_${pad(i)}.jpg`), type: 'jpeg', quality: 92 });
+  }
+  console.log(`${c.name}: ${c.frames} frames`);
+  await ctx.close();
+}
+for (const c of [...AD.clips, ...AD.stills]) await recordSpec(c);
+await page.evaluate(() => window.__ad.prepare());
+
 fs.mkdirSync(path.join(FR, 'base'), { recursive: true });
 let t0 = Date.now();
 for (let i = 0; i < total; i++) {

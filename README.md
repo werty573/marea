@@ -69,12 +69,14 @@ It's modelled on the structure of [this reel](https://www.instagram.com/reel/DdA
 | 19.97 (2nd drop) | Ember burst; 20.43 blue can macro |
 | 20.90 | Portside Digital end card; tagline 21.33, WhatsApp 21.50 |
 
-### Ads 2 and 3
+### Ads 2 and 3: website showcases
+
+These show the websites working, not just products. Every shot is a real site in a phone or browser frame, recorded live with a visible cursor (desktop) or tap ring (phone), with a chip naming the feature. They use MAREA, Soda, and the five demo sites on GitHub Pages: Tamarind Table, Gloss Lab, Leeward House, Pulse Yard and Gilded Hour.
 
 | File | Reference | Length | Idea |
 |---|---|---|---|
-| `ad/ad2.mp4` | [reel 2](https://www.instagram.com/reel/Db9_b7kp1jt/) and its song | 16.8 s | **Sketch → real.** A pencil concept sheet of the bottle builds word by word with the spoken line. On the drop it cuts to the photoreal bottle: label, stopper and base macros. Then the live MAREA site, soda macro + flavour switch, a MAREA scent switch, and the Portside card. |
-| `ad/ad3.mp4` | [reel 3](https://www.instagram.com/reel/DcKe2sfIsiG/) and its song | 18.3 s | **Down the grate.** The original "what is bro filming 💀" intro is kept untouched. When the phone drops into the dark we keep falling into the deep sea, with a depth gauge counting to 1200 m. A flash, and we land in MAREA, then whip through the live sites. |
+| `ad/ad2.mp4` | [reel 2](https://www.instagram.com/reel/Db9_b7kp1jt/) and its song | 16.8 s | **Wireframe → real.** A pencil wireframe of the site (phone and desktop, notes, user flow, style) builds word by word with the spoken line. On the drop it comes alive on a real phone, then one feature per hit: cursor-reactive 3D, one-click restyle, before/after reveal, live booking calendar (dates → total), class timetable, reservations, a product configurator, and a grid of every site on mobile. |
+| `ad/ad3.mp4` | [reel 3](https://www.instagram.com/reel/DcKe2sfIsiG/) and its song | 18.3 s | **Down the grate.** The original "what is bro filming 💀" intro is kept untouched. In the dark, our own code streams past while the page "loads" to 100%, then a hidden room lined with live websites (like the reel's card shop) appears, with a whip pan along the wall. Then each site in action: scroll story, hover gallery, quote builder, validated lead form, pinned menu, tap-to-restyle, configurator, and a pull-back to the whole wall. |
 
 Both loop one post-drop phrase of their song once (seams just before onsets). The analyses are in `reference/reel2/analysis.md` and `reference/reel3/analysis.md`.
 
@@ -87,7 +89,10 @@ yt-dlp -o "reference/reel3/reel.%(ext)s" "https://www.instagram.com/reel/DcKe2sf
 node ad/record.mjs      # ad 1 → ad/ad.mp4
 node ad/record.mjs 2    # ad 2 → ad/ad2.mp4
 node ad/record.mjs 3    # ad 3 → ad/ad3.mp4
+node ad/record.mjs 3 --reuse   # keep already-recorded site clips while tweaking
 ```
+
+Ads 2 and 3 record the five demo sites from their live GitHub Pages URLs.
 
 How the recorder works:
 

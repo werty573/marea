@@ -12,4 +12,4 @@
 
 **Music:** a quiet spoken intro, then the drop at 4.99 s (energy ~3×). After the drop it repeats in 8-beat phrases (chroma similarity 0.90), so the phrase 4.981–8.641 s can loop seamlessly.
 
-**MAREA ad 2** (`ad/ad2.mp4`, 16.8 s) mirrors this. A pencil concept sheet of the MAREA bottle builds word by word, then the drop cuts to the photoreal 3D bottle and its macros. One extra loop of the phrase carries the live MAREA site, the soda can macro and flavour switch, and a MAREA scent switch. It ends on a Portside card.
+**Ad 2** (`ad/ad2.mp4`, 16.8 s) mirrors this as a *website* story: a pencil wireframe of the site builds word by word, then on the drop it comes alive on a real phone, with one live feature per hit across Portside's demo sites.

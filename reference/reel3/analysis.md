@@ -12,4 +12,4 @@
 
 **Music:** a sparse intro, a build through the darkness, the reveal at 7.45 s, then steady 4-beat phrases (similarity 0.99), so 7.451–10.664 s can loop seamlessly.
 
-**MAREA ad 3** (`ad/ad3.mp4`, 18.3 s) keeps the original footage untouched up to 4.9 s, while the camera is already in the dark. Then we keep falling into the deep sea: plankton rush up past the camera, a depth gauge counts down to 1200 m and light grows from below. A flash, and we land inside the MAREA site. Then we whip through it: a scent spin, the live site scrolling, the soda site, a cursor scatter, the DEEP zoom-through, notes, the blue can, an Ember burst, and the Portside card.
+**Ad 3** (`ad/ad3.mp4`, 18.3 s) keeps the original footage untouched up to 4.9 s. Its card shop becomes a hidden room lined with live websites (see README)
