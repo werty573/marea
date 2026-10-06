@@ -2101,8 +2101,11 @@ function initAd() {
     const sh = t => (t >= M.p2 - .01 ? t + L : t);
     // swipe landings: the reference's swipe times (3.6, 4.6, 5.7, 6.17, 6.77, 7.3 | 7.83, 8.83, 9.4), each snapped to the
     // nearest strong hit in the music so every swipe lands on a beat; the repeated phrase repeats them
-    const ref = [3.75, 4.656, 5.561, 6.223, 6.687, 7.361];
+    // the first swipe starts on frame 106, exactly where the reference's own swipe begins after its intro
+    const ref = [3.667, 4.656, 5.561, 6.223, 6.687, 7.361];
     const lands = [...ref, ...ref.slice(1).map(t => t + L), sh(7.825), sh(8.719), sh(9.497)].map(snap);
+    // swipe directions measured on the reference: +1 = the new screen enters from the left (moves left → right), −1 = from the right
+    const refDir = [1, 1, 1, -1, 1, -1], dirs = [...refDir, ...refDir.slice(1), 1, 1, -1];
     const T = { end: snap(sh(9.834)), tag: snap(sh(10.077)), cta: snap(sh(10.298)), len: Math.round((M.src + L) * 30) / 30 };
     const FULL = { vp: [432, 768], dpr: 2.5, mobile: true, cursor: 'touch' };
     // [site, feature (null = just the page), clip spec]
@@ -2128,15 +2131,13 @@ function initAd() {
       ['leeward', null, {}],
     ];
     applyScentInstant(0);
-    gsap.set(['#thumbL'], { autoAlpha: 1 });
+    // the reference's own intro plays untouched (frames 0–105); its last frame then swipes out like a page
+    const SLOTS = [{ name: 'reel4-intro', from: 0, to: 106 / 30, video: M.file, srcFrom: 0 }];
+    stills.push({ name: 'reel4-last', video: M.file, at: 105 / 30, frames: 1 });
+    $('#thumbL').innerHTML = '<img data-still="reel4-last" alt="" style="width:100%;height:100%;display:block">';
+    gsap.set(['#thumbL', '#adHole'], { autoAlpha: 1 });
+    show('#adHole', false, 106 / 30);
     Object.assign(stage, { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1, cx: 0, cy: 0, lx: 0, ly: 0 });
-
-    // ── intro: the hook text, and a line-drawn thumb flicking on the hits ──
-    const flips = [[0, 'dn'], [.139, 'up'], [.604, 'dn'], [1.057, 'up'], [1.509, 'bl'], [1.62, 'dn'], [1.962, 'up'], [2.415, 'dn'], [2.868, 'up'], [3.18, 'bl'], [3.274, 'dn'], [3.5, 'up']];
-    flips.forEach(([t, pose]) => {
-      tl.call(() => { ['up', 'dn', 'bl'].forEach(p => $('#th-' + p).style.display = p === pose ? '' : 'none'); }, null, t);
-      if (pose === 'dn') tl.fromTo('#th-dn', { scale: .94, transformOrigin: '100% 60%' }, { scale: 1, duration: .16, ease: 'power2.out', immediateRender: false }, t);
-    });
 
     // ── swipe through the sites, one per landing ──
     const wb = { b: 0 };
@@ -2152,10 +2153,11 @@ function initAd() {
       tl.call(() => {
         shotState[s] = { name, f0: Math.round(tin * 30), off: 0 };
       }, null, tin);
-      tl.set(el, { autoAlpha: 1, x: 1080, scale: 1, zIndex: 3 }, tin);
+      const dir = dirs[i];
+      tl.set(el, { autoAlpha: 1, x: -1080 * dir, scale: 1, zIndex: 3 }, tin);
       tl.set(out, { zIndex: 2 }, tin);
       tl.to(el, { x: 0, duration: .133, ease: 'power2.out' }, tin);
-      tl.to(out, { x: -620, duration: .133, ease: 'power2.in' }, tin);
+      tl.to(out, { x: 620 * dir, duration: .133, ease: 'power2.in' }, tin);
       tl.fromTo(wb, { b: 0 }, { b: 34, duration: .066, ease: 'power1.in', onUpdate: blur, immediateRender: false }, tin)
         .to(wb, { b: 0, duration: .067, ease: 'power1.out', onUpdate: blur }, tin + .066);
       tl.set(out, { autoAlpha: 0, x: 0 }, land);
@@ -2180,7 +2182,7 @@ function initAd() {
       .fromTo('#pdBy', { opacity: 0 }, { opacity: 1, duration: .3, immediateRender: false }, T.tag)
       .fromTo('#pdCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .35, ease: 'surge', immediateRender: false }, T.cta)
       .fromTo('#pdMark', { scale: 1.12 }, { scale: 1, duration: .3, ease: 'power2.out', immediateRender: false }, T.cta);
-    return { T, M, SLOTS: [] };
+    return { T, M, SLOTS };
   }
 
   const { T, M, SLOTS } = [null, buildAd1, buildAd2, buildAd3, buildAd4][AD_N]();

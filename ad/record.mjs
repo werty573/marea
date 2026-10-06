@@ -66,6 +66,10 @@ async function recordSpec(c) {
   const dir = path.join(FR, 'clips', c.name);
   if (reuse && fs.existsSync(path.join(dir, `f_${pad(c.frames - 1)}.jpg`))) return console.log(`${c.name}: reused`);
   fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { recursive: true });
+  if (c.video) {                                   // a still taken from reference footage
+    ff('-ss', String(c.at || 0), '-i', path.join(root, c.video), '-frames:v', '1', '-vf', 'scale=1080:1920:flags=lanczos', '-q:v', '2', path.join(dir, 'f_0000.jpg'));
+    return console.log(`${c.name}: still from footage`);
+  }
   const ctx = await browser.newContext({ viewport: { width: c.vp[0], height: c.vp[1] }, deviceScaleFactor: c.dpr, isMobile: !!c.mobile, hasTouch: !!c.mobile });
   const p = await ctx.newPage(); watch(p, c.name);
   await p.addInitScript(HELPERS);
