@@ -49,7 +49,7 @@ The soda site is a full-screen hero (no scroll), live at `/soda/`:
 
 ## The ad
 
-`ad/ad.mp4` is 1080×1920, 30 fps, H.264 + AAC, 22 s. `ad/ad-silent.mp4` is the same video without audio.
+Ad 1 is 1080×1920, 30 fps, H.264 + AAC, 22 s, plus a silent version. **The rendered videos and soundtracks are not kept in this repo.** `node ad/record.mjs` writes them to `ad/` (git-ignored), and the finals are kept offline.
 
 It's modelled on the structure of [this reel](https://www.instagram.com/reel/DdAgrCAO4km/): a rejection DM over a boring site, then a hard cut on the drop to the flex, with the caption held across every shot. The analysis is in `reference/reel-analysis.md` and the beat map is in `reference/beats.json`. The reel's song is only 8.1 s, so the intro (0–3.556 s) is time-stretched with Rubber Band to 5.126 s, keeping the pitch and repeating nothing, to give the DM about 5 s. Then the drop phrase (3.556–6.023 s) loops five times. Every seam sits just before an onset, and every cut is within one frame of its hit.
 

@@ -6,3 +6,6 @@ ad/frames/
 node_modules/
 reference/**/reel.mp4
 reference/**/audio.wav
+# rendered ads and their soundtracks stay off GitHub (finals live in Downloads/Portside Ads)
+ad/*.mp4
+ad/*.m4a
