@@ -69,11 +69,24 @@ It's modelled on the structure of [this reel](https://www.instagram.com/reel/DdA
 | 19.97 (2nd drop) | Ember burst; 20.43 blue can macro |
 | 20.90 | Portside Digital end card; tagline 21.33, WhatsApp 21.50 |
 
+### Ads 2 and 3
+
+| File | Reference | Length | Idea |
+|---|---|---|---|
+| `ad/ad2.mp4` | [reel 2](https://www.instagram.com/reel/Db9_b7kp1jt/) and its song | 16.8 s | **Sketch → real.** A pencil concept sheet of the bottle builds word by word with the spoken line. On the drop it cuts to the photoreal bottle: label, stopper and base macros. Then the live MAREA site, soda macro + flavour switch, a MAREA scent switch, and the Portside card. |
+| `ad/ad3.mp4` | [reel 3](https://www.instagram.com/reel/DcKe2sfIsiG/) and its song | 18.3 s | **Down the grate.** The original "what is bro filming 💀" intro is kept untouched. When the phone drops into the dark we keep falling into the deep sea, with a depth gauge counting to 1200 m. A flash, and we land in MAREA, then whip through the live sites. |
+
+Both loop one post-drop phrase of their song once (seams just before onsets). The analyses are in `reference/reel2/analysis.md` and `reference/reel3/analysis.md`.
+
 The ad is a mode of the site: open `index.html?ad=1` to see the 1080×1920 layout. To re-record it:
 
 ```bash
 yt-dlp -o "reference/reel.%(ext)s" "https://www.instagram.com/reel/DdAgrCAO4km/"
-node ad/record.mjs
+yt-dlp -o "reference/reel2/reel.%(ext)s" "https://www.instagram.com/reel/Db9_b7kp1jt/"
+yt-dlp -o "reference/reel3/reel.%(ext)s" "https://www.instagram.com/reel/DcKe2sfIsiG/"
+node ad/record.mjs      # ad 1 → ad/ad.mp4
+node ad/record.mjs 2    # ad 2 → ad/ad2.mp4
+node ad/record.mjs 3    # ad 3 → ad/ad3.mp4
 ```
 
 How the recorder works:
@@ -88,5 +101,5 @@ How the recorder works:
 - Fonts: Bodoni Moda, Inter Tight and JetBrains Mono (Google Fonts, SIL OFL).
 - Studio lighting: [studio_small_09](https://polyhaven.com/a/studio_small_09) HDRI by Poly Haven (CC0), in `assets/studio.hdr`.
 - The bottle, pearls, sea glass, label and every effect are modelled in code; there are no stock images or 3D models.
-- Ad soundtrack: the audio of the reference Instagram reel above. It belongs to its rights holders and is used here only for the ad. Check the licence before running it as a paid ad.
+- Ad soundtracks and ad 3's opening footage come from the reference Instagram reels above. It belongs to its rights holders and is used here only for the ad. Check the licence before running it as a paid ad.
 - Design and build: Portside Digital.

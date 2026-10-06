@@ -9,7 +9,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@700;800&family=Caveat:wght@500;600;700&family=Rubik:wght@900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
@@ -248,6 +248,19 @@ body.ad #ad{display:block}
 .ad-ui .n{font:500 26px/1 var(--mono);letter-spacing:.14em;color:var(--pearl-dim)}
 .ad-ui .t{font-family:var(--serif);font-size:64px;line-height:1}
 .ad-cap-layer{z-index:8}
+.ad-sketch{z-index:11}
+#skInner{position:absolute;inset:0;transform-origin:50% 42%}
+#skInner svg{width:1080px;height:1920px;display:block}
+.ad-words{position:absolute;left:0;right:0;top:840px;text-align:center;font:900 136px/1 Rubik,sans-serif;letter-spacing:.01em;color:#c47f3e;text-shadow:0 4px 0 rgba(70,35,10,.22),0 12px 34px rgba(0,0,0,.22);transform-origin:50% 50%}
+.ad-badge{position:absolute;left:478px;top:1736px;width:124px;height:124px;border-radius:50%;background:#f4efe6;display:grid;place-items:center;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.ad-badge svg{width:50px;height:58px}
+.ad-descent{z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;color:var(--pearl);transform-origin:50% 50%}
+.ad-descent .lbl{font:500 26px/1 var(--mono);letter-spacing:.45em;color:var(--pearl-dim)}
+.ad-descent .dmc{font:400 170px/1 var(--mono);letter-spacing:.02em}
+.ad-descent .dmc i{font-style:normal;font-size:60px;margin-left:16px;color:var(--pearl-dim)}
+#dmWord{font-family:var(--serif);font-style:italic;font-size:60px;letter-spacing:.4em;color:var(--pearl)}
+#glowB{z-index:5;background:radial-gradient(75% 42% at 50% 104%,rgba(127,243,255,.6),transparent 72%);mix-blend-mode:screen}
+#flash{z-index:13;background:#fff}
 .ad-nav{position:absolute;top:64px;left:56px;right:56px;display:flex;justify-content:space-between;align-items:center}
 .ad-nav .b{display:flex;align-items:center;gap:20px;font-family:var(--serif);font-size:40px;letter-spacing:.34em}
 .ad-nav .b i{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 8%,var(--glow) 30%,var(--accent) 62%,transparent 64%);box-shadow:0 0 26px var(--glow)}
@@ -463,6 +476,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 /* =================================================================== */
 const Q = new URLSearchParams(location.search);
 const AD = Q.has('ad');
+const AD_N = AD ? (+Q.get('ad') || 1) : 0;
 const RM = !AD && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const COARSE = matchMedia('(pointer: coarse)').matches;
 const MOBILE = AD ? false : (innerWidth < 760 || COARSE);
@@ -1000,7 +1014,8 @@ postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
 /*  State                                                               */
 /* =================================================================== */
 const pointer = { x: 0, y: 0, sx: 0, sy: 0, px: innerWidth/2, py: innerHeight/2, lpx: innerWidth/2, lpy: innerHeight/2, speed: 0, active: false, power: 1 };
-const stage = { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1 };      // scroll-choreographed bottle + swarm placement
+const stage = { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1, cx: 0, cy: 0, lx: 0, ly: 0 };
+const camPar = { x: 0, y: 0 };      // scroll-choreographed bottle + swarm placement
 const segs = [];   // scroll segments: { st, from, to, p }
 const intro = { y: AD ? 0 : -4.5, spin: AD ? 0 : -Math.PI*2, swarm: AD ? 0 : 1, p: AD ? 1 : 0 };
 const fxState = { spin: 0, squash: 0, collapse: 0, surge: 0, blur: 0, hue: 0 };
@@ -1067,10 +1082,10 @@ function update(dt, t) {
 
   // camera: gentle depth parallax
   const camZ = baseCamZ * (stage.camZ / 10);
-  camera.position.x += (pointer.sx * .35 - camera.position.x) * (1 - Math.exp(-dt*3));
-  camera.position.y += (pointer.sy * .22 - camera.position.y) * (1 - Math.exp(-dt*3));
-  camera.position.z = camZ;
-  camera.lookAt(0, 0, 0);
+  camPar.x += (pointer.sx * .35 - camPar.x) * (1 - Math.exp(-dt*3));
+  camPar.y += (pointer.sy * .22 - camPar.y) * (1 - Math.exp(-dt*3));
+  camera.position.set(camPar.x + stage.cx, camPar.y + stage.cy, camZ);
+  camera.lookAt(stage.lx, stage.ly, 0);
   camera.updateMatrixWorld();
   syncTitle();
 
@@ -1229,6 +1244,15 @@ function setScent(i, ox = .5, oy = .5) {
   tl.eventCallback('onComplete', () => { switching = false; });
   tl.play();
   swapScentText(s);
+}
+
+function applyScentInstant(i) {
+  const s = SCENTS[i]; scentIdx = i;
+  [[bgU.uA0, 0], [bgU.uA1, 1], [bgU.uA2, 2], [bgU.uB0, 0], [bgU.uB1, 1], [bgU.uB2, 2]].forEach(([u, k]) => u.value.set(s.bg[k]));
+  bgU.uGA.value.set(s.glow); bgU.uGB.value.set(s.glow); bgU.uFlood.value = 0;
+  [[liquidU.uLA.value, s.la], [liquidU.uLB.value, s.lb], [shared.uAccent.value, s.accent], [shared.uGlow.value, s.glow], [shared.uDeep.value, s.deep],
+   [crystalMat.attenuationColor, s.accent], [scene.fog.color, s.deep]].forEach(([c, h]) => c.set(h));
+  drawLabel(s); applyScentDOM(s);
 }
 
 let snSplit;
@@ -1519,6 +1543,83 @@ function initAd() {
   const root = $('#ad');
   const wa = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.6 1.1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.6-.3z"/></svg>';
   const split = w => [...w].map(c => `<span class="ch"><b>${c}</b></span>`).join('');
+  // a designer's concept sheet for the bottle, drawn in pencil (ad 2's intro)
+  function sketchSVG() {
+    const ink = '#3d3832', soft = '#7a7268', hand = "font-family:Caveat,cursive;fill:#3d3832";
+    const note = (x, y, lines, ax, ay, anchor = 'start') => `
+      <path class="draw" d="M${anchor === 'start' ? x + 4 : x - 4} ${y + 12} Q ${(x + ax) / 2} ${(y + ay) / 2 - 30} ${ax} ${ay}" stroke="${ink}" stroke-width="2" fill="none" stroke-dasharray="2400" filter="url(#pencil)"/>
+      <circle cx="${ax}" cy="${ay}" r="5" fill="${ink}"/>
+      <text x="${x}" y="${y}" text-anchor="${anchor === 'start' ? 'end' : 'start'}" style="${hand};font-size:34px;font-weight:600">${lines.map((l, i) => `<tspan x="${x}" dy="${i ? 34 : 0}">${l}</tspan>`).join('')}</text>`;
+    const hatch = Array.from({ length: 40 }, (_, i) => `<line x1="${300 + i * 18}" y1="660" x2="${180 + i * 18}" y2="1060" stroke="${soft}" stroke-width="1.4"/>`).join('');
+    const swatch = (x, y, id, t1, t2) => `<rect x="${x}" y="${y}" width="120" height="120" rx="6" fill="url(#${id})" stroke="${ink}" stroke-width="2" filter="url(#pencil)"/>
+      <text x="${x + 140}" y="${y + 50}" style="${hand};font-size:34px;font-weight:700">${t1}</text>
+      <text x="${x + 140}" y="${y + 88}" style="${hand};font-size:28px;fill:${soft}">${t2}</text>`;
+    return `<svg viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="pencil"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/></filter>
+        <filter id="paper"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3" seed="9"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .27  0 0 0 0 .22  0 0 0 .09 0"/></filter>
+        <clipPath id="frontFace"><rect x="330" y="560" width="420" height="500" rx="84"/></clipPath>
+        <linearGradient id="gGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef4f6"/><stop offset=".5" stop-color="#b9c9d0"/><stop offset="1" stop-color="#e3ecef"/></linearGradient>
+        <radialGradient id="gPearl" cx=".35" cy=".3"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#ece3ea"/><stop offset="1" stop-color="#cbd6dd"/></radialGradient>
+        <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e7c4"/><stop offset=".5" stop-color="#b8955a"/><stop offset="1" stop-color="#efd9a8"/></linearGradient>
+        <linearGradient id="gEmber" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc46b"/><stop offset="1" stop-color="#ff3f62"/></linearGradient>
+      </defs>
+      <rect width="1080" height="1920" fill="#ebe6dc"/>
+      <rect width="1080" height="1920" filter="url(#paper)"/>
+      <text x="60" y="118" style="${hand};font-size:52px;font-weight:700;letter-spacing:2px">CONCEPT SKETCH</text>
+      <text x="1020" y="118" text-anchor="end" style="${hand};font-size:38px">MAREA N°03 — Ember Tide</text>
+      <line class="draw" x1="60" y1="140" x2="1020" y2="140" stroke="${ink}" stroke-width="2" stroke-dasharray="2400" filter="url(#pencil)"/>
+      <g filter="url(#pencil)" fill="none" stroke="${ink}" stroke-linecap="round" stroke-linejoin="round">
+        <circle class="draw" cx="540" cy="330" r="98" stroke-width="3" stroke-dasharray="2400"/>
+        <circle class="draw" cx="543" cy="332" r="95" stroke-width="1.5" stroke-dasharray="2400" opacity=".6"/>
+        <path class="draw" d="M478 288 Q 500 255 540 250" stroke-width="2" stroke-dasharray="2400"/>
+        <rect class="draw" x="468" y="428" width="144" height="44" rx="10" stroke-width="3" stroke-dasharray="2400"/>
+        <line x1="476" y1="450" x2="604" y2="450" stroke-width="1.4"/>
+        <path class="draw" d="M490 472 L484 530 M590 472 L596 530" stroke-width="3" stroke-dasharray="2400"/>
+        <rect class="draw" x="400" y="530" width="420" height="500" rx="84" stroke-width="1.6" stroke-dasharray="2400" opacity=".55"/>
+        <path class="draw" d="M414 560 L484 530 M736 560 L806 530 M736 1060 L806 1030" stroke-width="1.6" stroke-dasharray="2400" opacity=".6"/>
+        <rect class="draw" x="330" y="560" width="420" height="500" rx="84" stroke-width="3.4" stroke-dasharray="2400"/>
+        <rect class="draw" x="333" y="563" width="414" height="494" rx="82" stroke-width="1.2" stroke-dasharray="2400" opacity=".5"/>
+        <path class="draw" d="M346 668 C 420 650 460 690 540 670 S 660 650 734 668" stroke-width="2.4" stroke-dasharray="2400"/>
+        <rect x="420" y="740" width="240" height="210" rx="6" stroke-width="1.6" stroke-dasharray="8 7"/>
+        <path d="M372 600 Q 360 760 380 980" stroke-width="2" opacity=".6"/>
+        <path d="M700 990 Q 720 1010 690 1040" stroke-width="2" opacity=".6"/>
+      </g>
+      <g clip-path="url(#frontFace)" opacity=".55">${hatch}</g>
+      <text x="540" y="812" text-anchor="middle" style="font-family:'Bodoni Moda',serif;font-size:40px;letter-spacing:14px;fill:${ink}">MAREA</text>
+      <text x="540" y="862" text-anchor="middle" style="${hand};font-size:34px">Ember Tide</text>
+      <text x="540" y="912" text-anchor="middle" style="${hand};font-size:26px;fill:${soft}">50 ml — 1200 m</text>
+      <g stroke="${ink}" stroke-width="1.6" filter="url(#pencil)"><line x1="250" y1="232" x2="250" y2="1060"/><line x1="236" y1="232" x2="264" y2="232"/><line x1="236" y1="1060" x2="264" y2="1060"/>
+        <line x1="330" y1="1110" x2="750" y2="1110"/><line x1="330" y1="1096" x2="330" y2="1124"/><line x1="750" y1="1096" x2="750" y2="1124"/></g>
+      <text x="236" y="650" text-anchor="end" style="${hand};font-size:30px;fill:${soft}" transform="rotate(-90 236 650)">h 12 cm</text>
+      <text x="540" y="1150" text-anchor="middle" style="${hand};font-size:30px;fill:${soft}">w 9 cm</text>
+      ${note(200, 300, ['Pearl stopper', 'nacre + sheen'], 446, 318)}
+      ${note(200, 470, ['Champagne', 'metal collar'], 466, 452)}
+      ${note(880, 600, ['Thick flint glass', 'real refraction'], 752, 640, 'end')}
+      ${note(880, 820, ['Liquid sloshes', 'on a spring'], 736, 700, 'end')}
+      ${note(880, 1000, ['Heavy base', '1.2 cm'], 712, 1046, 'end')}
+      <text x="60" y="1236" style="${hand};font-size:42px;font-weight:700">MATERIALS &amp; FINISH</text>
+      <line x1="60" y1="1252" x2="480" y2="1252" stroke="${ink}" stroke-width="1.6"/>
+      ${swatch(60, 1280, 'gGlass', 'Flint glass', 'Clear, high IOR')}
+      ${swatch(60, 1420, 'gPearl', 'Nacre pearl', 'Iridescent sheen')}
+      ${swatch(60, 1560, 'gGold', 'Champagne', 'Brushed metal')}
+      ${swatch(60, 1700, 'gEmber', 'Ember juice', 'Amber → coral')}
+      <text x="600" y="1236" style="${hand};font-size:42px;font-weight:700">DETAIL STUDY</text>
+      <line x1="600" y1="1252" x2="1020" y2="1252" stroke="${ink}" stroke-width="1.6"/>
+      <g filter="url(#pencil)" fill="none" stroke="${ink}" stroke-width="2.4">
+        <circle cx="700" cy="1390" r="92"/><circle cx="700" cy="1356" r="44"/><rect x="664" y="1402" width="72" height="22" rx="5"/><path d="M672 1424 L668 1470 M728 1424 L732 1470"/>
+        <circle cx="905" cy="1390" r="92"/><path d="M835 1430 C 870 1415 890 1440 930 1425 S 965 1418 975 1430"/><rect x="852" y="1340" width="106" height="60" rx="4" stroke-dasharray="6 5"/>
+      </g>
+      <text x="700" y="1520" text-anchor="middle" style="${hand};font-size:28px">stopper + collar</text>
+      <text x="905" y="1520" text-anchor="middle" style="${hand};font-size:28px">meniscus + label</text>
+      <text x="600" y="1610" style="${hand};font-size:42px;font-weight:700">DESIGN LANGUAGE</text>
+      <text x="600" y="1660" style="${hand};font-size:32px">• Soft radius, heavy base</text>
+      <text x="600" y="1702" style="${hand};font-size:32px">• Floats, never sits</text>
+      <text x="600" y="1744" style="${hand};font-size:32px">• Light lives in the glass</text>
+      <text x="600" y="1800" style="${hand};font-size:28px;fill:${soft}">built for the web · three.js · 60 fps</text>
+    </svg>`;
+  }
+
   root.innerHTML = `
     <div class="ad-layer ad-title" id="adTitle">${split('MAREA')}</div>
     <div class="ad-layer ad-top" id="adTop">
@@ -1543,6 +1644,13 @@ function initAd() {
       <div class="k" id="adDeepK">Into the</div>
     </div>
     <div class="ad-layer ad-cap-layer"><div class="ad-caption" id="adCap">Your loss lil bro</div></div>
+    <div class="ad-layer" id="adBlack" style="z-index:10;background:#000"></div>
+    <div class="ad-layer ad-sketch" id="sk"><div id="skInner">${sketchSVG()}</div></div>
+    <div class="ad-layer" style="z-index:12"><div class="ad-words" id="adWords"></div></div>
+    <div class="ad-layer" style="z-index:12"><div class="ad-badge" id="adBadge"><svg viewBox="0 0 26.4 30"><rect width="10" height="30" rx="2.4" fill="#0B1F3A"/><path d="M13.8 0H18.2A8.2 8.2 0 0 1 18.2 16.4H13.8A2.4 2.4 0 0 1 11.4 14V2.4A2.4 2.4 0 0 1 13.8 0Z" fill="#00B3A6"/><rect x="11.4" y="17.8" width="6.6" height="6.6" rx="2" fill="#FF6B5E"/></svg></div></div>
+    <div class="ad-layer" id="glowB"></div>
+    <div class="ad-layer ad-descent" id="descent"><div class="lbl">DEPTH</div><div class="dmc"><span id="dmN">0000</span><i>m</i></div><div id="dmWord">into the deep</div></div>
+    <div class="ad-layer" id="flash"></div>
     <div class="ad-layer tpl" id="tpl">
       <div class="tpl-inner" id="tplInner">
         <div class="tpl-head"><span>BUSINESS CO.</span><span class="tpl-burger"></span></div>
@@ -1570,136 +1678,359 @@ function initAd() {
       <div class="ec-cta" id="pdCta">${wa}<span>868-259-1409</span></div>
     </div>`;
 
-  // beat map — reference/beats.json. The reel's music is 8.1 s. The ad (1) time-stretches the intro
-  // [0, p1) by E seconds (pitch kept) so the DM hook gets ~5 s with no repeated material, then (2) loops the
-  // drop phrase [p1, p2) `loops` more times. Seams sit just before onsets; later times shift accordingly.
-  const M = { p1: 3.5556, p2: 6.0227, loops: 5, src: 8.102 };
-  const E = 1.5702, L = M.p2 - M.p1, SH = E + M.loops * L;
-  M.segs = [[0, M.p1, M.p1 + E], [M.p1, M.p2], ...Array(M.loops).fill([M.p1, M.p2]), [M.p2, M.src]];   // [from, to, stretchedLength?]
-  // looped drops hit ~15 ms after each seam (measured on the export); every cut snaps to the nearest frame
-  const blk = k => k ? M.p1 + E + k * L + .015 : 3.587 + E;
-  const snap = t => Math.round(t * 30) / 30 - .001;
-  const T0 = {
-    drop: blk(0), b0c: blk(0) + 1.533,
-    b1: blk(1), b2: blk(2), b2c: blk(2) + 1.533, b3: blk(3), b3c: blk(3) + 1.533,
-    b4: blk(4), b5: blk(5), b5c: blk(5) + 1.533,
-    drop2: 6.049 + SH, d2hit: 6.049 + SH + .465, end: 6.978 + SH, hit1: 7.43 + SH, hit2: 7.581 + SH,
-  };
-  const T = Object.fromEntries(Object.entries(T0).map(([k, v]) => [k, snap(v)]));
-  T.len = Math.round((M.src + SH) * 30) / 30;
-  // windows filled by live-site recordings (ad/record.mjs) — the page shows black there
-  const SLOTS = [
-    { name: 'marea-scroll', from: T.b1, to: T.b2 },
-    { name: 'soda-hero', from: T.b3, to: T.b3c },
-    { name: 'soda-macro', from: T.b3c, to: T.b4 },
-    { name: 'soda-switch', from: T.b4, to: T.b5 },
-    { name: 'soda-blue', from: T.d2hit, to: T.end },
-  ];
-  const sub = [.465, .929, 1.382];                                // strong hits inside every block
   const grain = $('.grain');
   const tl = gsap.timeline({ paused: true });
   const show = (sel, on, at) => tl.set(sel, { autoAlpha: on ? 1 : 0 }, at);
-  const cutTo = (at, st) => tl.set(stage, { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1, ...st }, at);
+  const cutTo = (at, st) => tl.set(stage, { x: 0, y: 0, s: 1, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1, cx: 0, cy: 0, lx: 0, ly: 0, ...st }, at);
   const pulse = (at, v = .9) => tl.fromTo(fxState, { surge: v }, { surge: 0, duration: .4, ease: 'power2.out', immediateRender: false }, at);
-
-  // initial state
-  gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep', '#adHole'], { autoAlpha: 0 });
-  gsap.set('#tpl', { autoAlpha: 1 });
-  gsap.set('#adTitle .ch b', { yPercent: 115 });
+  const snap = t => Math.round(t * 30) / 30 - .001;
+  const lerp = (a, b, k) => a + (b - a) * k;
+  // Portside Digital lockup; tagline and CTA land on two late hits
+  function endCard(at, tag, cta) {
+    tl.fromTo('#end', { autoAlpha: 0 }, { autoAlpha: 1, duration: .06, ease: 'none', immediateRender: false }, at)
+      .fromTo('#pdMark', { scale: .3, opacity: 0, rotate: -12 }, { scale: 1, opacity: 1, rotate: 0, duration: .5, ease: 'surge', immediateRender: false }, at)
+      .fromTo('#pdWord', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .45, ease: 'silk', immediateRender: false }, at + .08)
+      .fromTo('#pdTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .4, ease: 'silk', immediateRender: false }, tag)
+      .fromTo('#pdBy', { opacity: 0 }, { opacity: 1, duration: .4, ease: 'silk', immediateRender: false }, tag + .05)
+      .fromTo('#pdCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .45, ease: 'surge', immediateRender: false }, cta)
+      .fromTo('#pdMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, cta);
+  }
+  // every ad layer starts hidden; each builder shows what it uses
+  gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep', '#adHole',
+            '#tpl', '#adBlack', '#sk', '#adWords', '#adBadge', '#glowB', '#descent', '#flash'], { autoAlpha: 0 });
   gsap.set(['#pdMark', '#pdWord', '#pdTag', '#pdBy', '#pdCta'], { opacity: 0 });
-  Object.assign(stage, { x: 0, y: -.06, s: .82, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1 });
-  Object.assign(intro, { y: -4.5, spin: -Math.PI*2, swarm: 1, p: 0 });
-  fxState.collapse = 0;
-  SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
 
-  // ── 0 → drop: bland template + rejection DM, faux handheld drift ──
-  const shake = { t: 0 };
-  tl.to(shake, { t: T.drop, duration: T.drop, ease: 'none', onUpdate() {
-    const t = shake.t;
-    const n = (a, b) => Math.sin(t*a) * .6 + Math.sin(t*b + 1.3) * .4;
-    $('#tplInner').style.transform = `translate(${n(1.7, 3.1)*10}px,${n(2.3, 1.1)*12}px) rotate(${n(1.3, 2.9)*.5}deg) scale(1.03)`;
-    $('#tplScroll').style.transform = `translateY(${-gsap.parseEase('power1.inOut')(Math.min(t/(T.drop - .2), 1)) * 700}px)`;
-  } }, 0);
+  /* ───────────────────────── ad 1 · "your loss lil bro" (reference reel 1) ───────────────────────── */
+  function buildAd1() {
+    // beat map — reference/beats.json. The reel's music is 8.1 s. The ad (1) time-stretches the intro
+    // [0, p1) by E seconds (pitch kept) so the DM hook gets ~5 s with no repeated material, then (2) loops the
+    // drop phrase [p1, p2) `loops` more times. Seams sit just before onsets; later times shift accordingly.
+    const M = { file: 'reference/reel.mp4', p1: 3.5556, p2: 6.0227, loops: 5, src: 8.102 };
+    const E = 1.5702, L = M.p2 - M.p1, SH = E + M.loops * L;
+    M.segs = [[0, M.p1, M.p1 + E], [M.p1, M.p2], ...Array(M.loops).fill([M.p1, M.p2]), [M.p2, M.src]];   // [from, to, stretchedLength?]
+    // looped drops hit ~15 ms after each seam (measured on the export); every cut snaps to the nearest frame
+    const blk = k => k ? M.p1 + E + k * L + .015 : 3.587 + E;
+    const T0 = {
+      drop: blk(0), b0c: blk(0) + 1.533,
+      b1: blk(1), b2: blk(2), b2c: blk(2) + 1.533, b3: blk(3), b3c: blk(3) + 1.533,
+      b4: blk(4), b5: blk(5), b5c: blk(5) + 1.533,
+      drop2: 6.049 + SH, d2hit: 6.049 + SH + .465, end: 6.978 + SH, hit1: 7.43 + SH, hit2: 7.581 + SH,
+    };
+    const T = Object.fromEntries(Object.entries(T0).map(([k, v]) => [k, snap(v)]));
+    T.len = Math.round((M.src + SH) * 30) / 30;
+    // windows filled by live-site recordings (ad/record.mjs) — the page shows black there
+    const SLOTS = [
+      { name: 'marea-scroll', from: T.b1, to: T.b2, caption: true },
+      { name: 'soda-hero', from: T.b3, to: T.b3c, caption: true },
+      { name: 'soda-macro', from: T.b3c, to: T.b4, caption: true },
+      { name: 'soda-switch', from: T.b4, to: T.b5, caption: true },
+      { name: 'soda-blue', from: T.d2hit, to: T.end, caption: true },
+    ];
+    const sub = [.465, .929, 1.382];                                // strong hits inside every block
 
-  // ── drop: hard cut, letterbox, bottle rises, MAREA reveals ──
-  show('#tpl', false, T.drop); show(['#adTitle', '#adTop', '#adCap', '#barT', '#barB'], true, T.drop);
-  tl.set(intro, { p: 1 }, T.drop);
-  tl.fromTo(intro, { y: -2.6 }, { y: 0, duration: 1.3, ease: 'silk' }, T.drop)
-    .fromTo(intro, { spin: -Math.PI*1.2 }, { spin: 0, duration: 1.45, ease: 'silk' }, T.drop)
-    .fromTo(intro, { swarm: 1 }, { swarm: 0, duration: 1.3, ease: 'silk' }, T.drop + .05)
-    .to('#adTitle .ch b', { yPercent: 0, duration: .9, ease: 'silk', stagger: .06 }, T.drop + .04);
-  sub.forEach(o => pulse(T.drop + o));
-  tl.fromTo(stage, { camZ: 10.6 }, { camZ: 9.6, duration: T.b0c - T.drop, ease: 'none', immediateRender: false }, T.drop);
+    // initial state
+    gsap.set(['#adTitle', '#adTop', '#end', '#adCursor', '#adUI', '#adCap', '#adNav', '#adNote', '#adCards', '#adDeep', '#adHole'], { autoAlpha: 0 });
+    gsap.set('#tpl', { autoAlpha: 1 });
+    gsap.set('#adTitle .ch b', { yPercent: 115 });
+    gsap.set(['#pdMark', '#pdWord', '#pdTag', '#pdBy', '#pdCta'], { opacity: 0 });
+    Object.assign(stage, { x: 0, y: -.06, s: .82, ry: 0, rx: 0, camZ: 10, spread: 1, ps: 1 });
+    Object.assign(intro, { y: -4.5, spin: -Math.PI*2, swarm: 1, p: 0 });
+    fxState.collapse = 0;
+    SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
 
-  // ── full frame, close: switch → N°02 spins through the block's big hit ──
-  show(['#barT', '#barB', '#adTitle'], false, T.b0c); show('#adNav', true, T.b0c);
-  cutTo(T.b0c, { camZ: 7.6, y: .02 });
-  tl.add(buildScentTL(1, .5, .52, 1.62).paused(false), T.b0c);
-  tl.to(stage, { camZ: 8.3, duration: T.b1 - T.b0c, ease: 'none' }, T.b0c);
+    // ── 0 → drop: bland template + rejection DM, faux handheld drift ──
+    const shake = { t: 0 };
+    tl.to(shake, { t: T.drop, duration: T.drop, ease: 'none', onUpdate() {
+      const t = shake.t;
+      const n = (a, b) => Math.sin(t*a) * .6 + Math.sin(t*b + 1.3) * .4;
+      $('#tplInner').style.transform = `translate(${n(1.7, 3.1)*10}px,${n(2.3, 1.1)*12}px) rotate(${n(1.3, 2.9)*.5}deg) scale(1.03)`;
+      $('#tplScroll').style.transform = `translateY(${-gsap.parseEase('power1.inOut')(Math.min(t/(T.drop - .2), 1)) * 700}px)`;
+    } }, 0);
 
-  // ── block 1: [slot] the real MAREA site scrolling on a phone ──
+    // ── drop: hard cut, letterbox, bottle rises, MAREA reveals ──
+    show('#tpl', false, T.drop); show(['#adTitle', '#adTop', '#adCap', '#barT', '#barB'], true, T.drop);
+    tl.set(intro, { p: 1 }, T.drop);
+    tl.fromTo(intro, { y: -2.6 }, { y: 0, duration: 1.3, ease: 'silk' }, T.drop)
+      .fromTo(intro, { spin: -Math.PI*1.2 }, { spin: 0, duration: 1.45, ease: 'silk' }, T.drop)
+      .fromTo(intro, { swarm: 1 }, { swarm: 0, duration: 1.3, ease: 'silk' }, T.drop + .05)
+      .to('#adTitle .ch b', { yPercent: 0, duration: .9, ease: 'silk', stagger: .06 }, T.drop + .04);
+    sub.forEach(o => pulse(T.drop + o));
+    tl.fromTo(stage, { camZ: 10.6 }, { camZ: 9.6, duration: T.b0c - T.drop, ease: 'none', immediateRender: false }, T.drop);
 
-  // ── block 2: wide, a cursor sweeps through and scatters the swarm ──
-  cutTo(T.b2, { camZ: 12.5, y: .1, x: -.12, ry: 1.05, rx: .18 });
-  pulse(T.b2, 1); sub.forEach(o => pulse(T.b2 + o, .6));
-  show(['#adCursor', '#adUI'], true, T.b2);
-  const cur = { x: 120, y: 760 };
-  const placeCursor = () => {
-    pointer.px = cur.x; pointer.py = cur.y;
-    pointer.x = cur.x / 1080 * 2 - 1; pointer.y = -(cur.y / 1920) * 2 + 1;
-    $('#adCursor').style.transform = `translate(${cur.x}px,${cur.y}px)`;
-  };
-  tl.set(pointer, { active: true }, T.b2);
-  tl.fromTo(cur, { x: 80, y: 700 }, { x: 980, y: 1120, duration: .62, ease: 'power2.inOut', onUpdate: placeCursor, immediateRender: false }, T.b2 + .04)
-    .to(cur, { x: 180, y: 1350, duration: .55, ease: 'power2.inOut', onUpdate: placeCursor }, T.b2 + .7)
-    .to(cur, { x: 700, y: 880, duration: .3, ease: 'power3.out', onUpdate: placeCursor }, T.b2 + 1.25);
-  tl.to(stage, { camZ: 10.6, ry: .7, duration: T.b2c - T.b2, ease: 'power1.in' }, T.b2);
+    // ── full frame, close: switch → N°02 spins through the block's big hit ──
+    show(['#barT', '#barB', '#adTitle'], false, T.b0c); show('#adNav', true, T.b0c);
+    cutTo(T.b0c, { camZ: 7.6, y: .02 });
+    tl.add(buildScentTL(1, .5, .52, 1.62).paused(false), T.b0c);
+    tl.to(stage, { camZ: 8.3, duration: T.b1 - T.b0c, ease: 'none' }, T.b0c);
 
-  // ── notes: "Night-blooming cereus" reveals while the bottle turns ──
-  tl.set(pointer, { active: false }, T.b2c);
-  show(['#adCursor', '#adUI'], false, T.b2c); show('#adNote', true, T.b2c);
-  cutTo(T.b2c, { camZ: 10, y: -.3, x: .12, s: .78, ry: -.6, spread: .55, ps: .7 });
-  tl.fromTo('#adNote .h b', { yPercent: 110 }, { yPercent: 0, duration: .7, ease: 'silk', stagger: .08, immediateRender: false }, T.b2c)
-    .fromTo('#adNote .k', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.b2c + .05)
-    .to(stage, { ry: .9, duration: T.b3 - T.b2c, ease: 'power2.inOut' }, T.b2c);
-  pulse(T.b2c + .313);
-  show(['#adNote', '#adNav'], false, T.b3);
+    // ── block 1: [slot] the real MAREA site scrolling on a phone ──
 
-  // ── blocks 3–4: [slots] the soda can site: hero, macro, flavour switch ──
+    // ── block 2: wide, a cursor sweeps through and scatters the swarm ──
+    cutTo(T.b2, { camZ: 12.5, y: .1, x: -.12, ry: 1.05, rx: .18 });
+    pulse(T.b2, 1); sub.forEach(o => pulse(T.b2 + o, .6));
+    show(['#adCursor', '#adUI'], true, T.b2);
+    const cur = { x: 120, y: 760 };
+    const placeCursor = () => {
+      pointer.px = cur.x; pointer.py = cur.y;
+      pointer.x = cur.x / 1080 * 2 - 1; pointer.y = -(cur.y / 1920) * 2 + 1;
+      $('#adCursor').style.transform = `translate(${cur.x}px,${cur.y}px)`;
+    };
+    tl.set(pointer, { active: true }, T.b2);
+    tl.fromTo(cur, { x: 80, y: 700 }, { x: 980, y: 1120, duration: .62, ease: 'power2.inOut', onUpdate: placeCursor, immediateRender: false }, T.b2 + .04)
+      .to(cur, { x: 180, y: 1350, duration: .55, ease: 'power2.inOut', onUpdate: placeCursor }, T.b2 + .7)
+      .to(cur, { x: 700, y: 880, duration: .3, ease: 'power3.out', onUpdate: placeCursor }, T.b2 + 1.25);
+    tl.to(stage, { camZ: 10.6, ry: .7, duration: T.b2c - T.b2, ease: 'power1.in' }, T.b2);
 
-  // ── block 5: zoom through DEEP ──
-  show('#adDeep', true, T.b5);
-  cutTo(T.b5, { camZ: 9.5, y: -.02, s: .9 });
-  tl.call(() => { const b = $('#adDeepText text').getExtentOfChar(2); gsap.set('#adDeepText', { svgOrigin: `${b.x + b.width*.14} ${b.y + b.height*.62}`, scale: 1 }); }, null, T.b5);
-  tl.set(['#adDeepInk', '#adDeepK'], { opacity: 1 }, T.b5);
-  tl.to('#adDeepText', { scale: 40, duration: T.b5c - T.b5, ease: 'power3.in' }, T.b5)
-    .to('#adDeepK', { opacity: 0, y: -40, duration: .4, ease: 'power2.in' }, T.b5 + .5)
-    .to('#adDeepInk', { opacity: 0, duration: .45, ease: 'power1.in' }, T.b5c - .45);
+    // ── notes: "Night-blooming cereus" reveals while the bottle turns ──
+    tl.set(pointer, { active: false }, T.b2c);
+    show(['#adCursor', '#adUI'], false, T.b2c); show('#adNote', true, T.b2c);
+    cutTo(T.b2c, { camZ: 10, y: -.3, x: .12, s: .78, ry: -.6, spread: .55, ps: .7 });
+    tl.fromTo('#adNote .h b', { yPercent: 110 }, { yPercent: 0, duration: .7, ease: 'silk', stagger: .08, immediateRender: false }, T.b2c)
+      .fromTo('#adNote .k', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: .5, ease: 'silk', immediateRender: false }, T.b2c + .05)
+      .to(stage, { ry: .9, duration: T.b3 - T.b2c, ease: 'power2.inOut' }, T.b2c);
+    pulse(T.b2c + .313);
+    show(['#adNote', '#adNav'], false, T.b3);
 
-  // ── push-in, then a fast switch to N°03 Ember that bursts on the second drop ──
-  show('#adDeep', false, T.b5c); show('#adNav', true, T.b5c);
-  cutTo(T.b5c, { camZ: 9.2, y: 0, ry: -.3 });
-  tl.to(stage, { camZ: 7.4, ry: .2, duration: T.drop2 - T.b5c, ease: 'power2.in' }, T.b5c);
-  tl.add(buildScentTL(2, .5, .5, 2.4).paused(false), T.drop2 - .25);
-  cutTo(T.drop2, { camZ: 11.5, y: .02, rx: .1 });
-  pulse(T.drop2, 1);
-  tl.to(stage, { camZ: 10.4, duration: T.end - T.drop2, ease: 'power1.out' }, T.drop2);
+    // ── blocks 3–4: [slots] the soda can site: hero, macro, flavour switch ──
 
-  // ── end card: Portside Digital lockup; tagline and CTA land on the last two hits ──
-  show(['#adTop', '#adNav', '#adCap'], false, T.end);
-  tl.fromTo('#end', { autoAlpha: 0 }, { autoAlpha: 1, duration: .06, ease: 'none', immediateRender: false }, T.end)
-    .fromTo('#pdMark', { scale: .3, opacity: 0, rotate: -12 }, { scale: 1, opacity: 1, rotate: 0, duration: .5, ease: 'surge', immediateRender: false }, T.end)
-    .fromTo('#pdWord', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .45, ease: 'silk', immediateRender: false }, T.end + .08)
-    .fromTo('#pdTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .4, ease: 'silk', immediateRender: false }, T.hit1)
-    .fromTo('#pdBy', { opacity: 0 }, { opacity: 1, duration: .4, ease: 'silk', immediateRender: false }, T.hit1 + .05)
-    .fromTo('#pdCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .45, ease: 'surge', immediateRender: false }, T.hit2)
-    .fromTo('#pdMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit2);
+    // ── block 5: zoom through DEEP ──
+    show('#adDeep', true, T.b5);
+    cutTo(T.b5, { camZ: 9.5, y: -.02, s: .9 });
+    tl.call(() => { const b = $('#adDeepText text').getExtentOfChar(2); gsap.set('#adDeepText', { svgOrigin: `${b.x + b.width*.14} ${b.y + b.height*.62}`, scale: 1 }); }, null, T.b5);
+    tl.set(['#adDeepInk', '#adDeepK'], { opacity: 1 }, T.b5);
+    tl.to('#adDeepText', { scale: 40, duration: T.b5c - T.b5, ease: 'power3.in' }, T.b5)
+      .to('#adDeepK', { opacity: 0, y: -40, duration: .4, ease: 'power2.in' }, T.b5 + .5)
+      .to('#adDeepInk', { opacity: 0, duration: .45, ease: 'power1.in' }, T.b5c - .45);
+
+    // ── push-in, then a fast switch to N°03 Ember that bursts on the second drop ──
+    show('#adDeep', false, T.b5c); show('#adNav', true, T.b5c);
+    cutTo(T.b5c, { camZ: 9.2, y: 0, ry: -.3 });
+    tl.to(stage, { camZ: 7.4, ry: .2, duration: T.drop2 - T.b5c, ease: 'power2.in' }, T.b5c);
+    tl.add(buildScentTL(2, .5, .5, 2.4).paused(false), T.drop2 - .25);
+    cutTo(T.drop2, { camZ: 11.5, y: .02, rx: .1 });
+    pulse(T.drop2, 1);
+    tl.to(stage, { camZ: 10.4, duration: T.end - T.drop2, ease: 'power1.out' }, T.drop2);
+
+    // ── end card: Portside Digital lockup; tagline and CTA land on the last two hits ──
+    show(['#adTop', '#adNav', '#adCap'], false, T.end);
+    tl.fromTo('#end', { autoAlpha: 0 }, { autoAlpha: 1, duration: .06, ease: 'none', immediateRender: false }, T.end)
+      .fromTo('#pdMark', { scale: .3, opacity: 0, rotate: -12 }, { scale: 1, opacity: 1, rotate: 0, duration: .5, ease: 'surge', immediateRender: false }, T.end)
+      .fromTo('#pdWord', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: .45, ease: 'silk', immediateRender: false }, T.end + .08)
+      .fromTo('#pdTag', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .4, ease: 'silk', immediateRender: false }, T.hit1)
+      .fromTo('#pdBy', { opacity: 0 }, { opacity: 1, duration: .4, ease: 'silk', immediateRender: false }, T.hit1 + .05)
+      .fromTo('#pdCta', { opacity: 0, scale: .7 }, { opacity: 1, scale: 1, duration: .45, ease: 'surge', immediateRender: false }, T.hit2)
+      .fromTo('#pdMark', { scale: 1.12 }, { scale: 1, duration: .35, ease: 'power2.out', immediateRender: false }, T.hit2);
+    return { T, M, SLOTS };
+  }
+
+  /* ───────────────────────── ad 2 · "sketch → real" (reference reel 2) ───────────────────────── */
+  function buildAd2() {
+    // reel 2 is 13.19 s; its first post-drop 8-beat phrase [p1, p2) plays twice (seams just before onsets)
+    const M = { file: 'reference/reel2/reel.mp4', p1: 4.9807, p2: 8.6407, src: 13.187 };
+    const L = M.p2 - M.p1;
+    M.segs = [[0, M.p2], [M.p1, M.p2], [M.p2, M.src]];
+    const T0 = {
+      drop: 4.933, m1: 6.983, m2: 7.517, m3: 8.35,                 // reference cuts
+      burst: 4.992 + L, site: 5.457 + L, sodaMacro: 7.059 + L,      // the repeated phrase's hits
+      sodaSwitch: 7.721 + L, swap: 8.429 + L,
+      mswitch: 9.117 + L, wide: 9.75 + L, end: 10.667 + L, tag: 11.18 + L, cta: 11.436 + L,
+    };
+    const T = Object.fromEntries(Object.entries(T0).map(([k, v]) => [k, snap(v)]));
+    T.len = Math.round((M.src + L) * 30) / 30;
+    // the spoken line, word by word (timed off the reference's own captions)
+    const WORDS = [['YOU', .033], ['CANNOT', .567], ['REASON', 1.1], ['WITH', 1.667], ['A', 1.8], ['TIGER', 2.2],
+                   ['WHEN', 2.833], ['YOUR', 3.1], ['HEAD', 3.367], ['IS', 3.667], ['IN', 3.9], ['HIS', 4.1]];
+    const SLOTS = [
+      { name: 'marea-scroll', from: T.site, to: T.sodaMacro, opts: { target: '#manifesto', frac: .7 } },
+      { name: 'soda-macro', from: T.sodaMacro, to: T.sodaSwitch },
+      { name: 'soda-switch', from: T.sodaSwitch, to: T.mswitch, opts: { clickAt: Math.round((T.swap - .45 - T.sodaSwitch) * 30) } },
+    ];
+
+    applyScentInstant(2);                                          // warm Ember tones, like the reference's brown studio
+    gsap.set(['#sk', '#adWords', '#adBadge', '#adBlack'], { autoAlpha: 1 });
+    gsap.set('#tpl', { autoAlpha: 0 });
+    Object.assign(stage, { x: 0, y: -.02, s: 1, ry: .5, rx: .06, camZ: 9.2, spread: 1, ps: 0, cx: 0, cy: 0, lx: 0, ly: 0 });
+    Object.assign(intro, { y: 0, spin: 0, swarm: 0, p: 1 });
+    bgU.uDepth.value = .82;
+    SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
+
+    // ── intro: the concept sheet opens out of a hairline while the line lands word by word ──
+    const sk = { k: 0 };
+    tl.fromTo(sk, { k: 0 }, { k: 1, duration: 3.75, ease: 'power2.inOut', immediateRender: false, onUpdate() {
+      const k = sk.k, top = lerp(49.6, 0, k), bot = lerp(49.6, 0, Math.min(1, k * 1.08)), side = lerp(7, 0, k);
+      $('#sk').style.clipPath = `inset(${top}% ${side}% ${bot}% ${side}% round ${lerp(6, 0, k)}px)`;
+      $('#skInner').style.transform = `translateY(${lerp(140, 0, k)}px) scale(${lerp(1.12, 1, k)})`;
+    } }, 0);
+    tl.set('#sk', { clipPath: 'inset(49.6% 7% 49.6% 7% round 6px)' }, 0);
+    WORDS.forEach(([w, t], i) => {
+      tl.call(() => { $('#adWords').textContent = w; }, null, t);
+      tl.fromTo('#adWords', { scale: 1.18, opacity: .2 }, { scale: 1, opacity: 1, duration: .14, ease: 'power2.out', immediateRender: false }, t);
+    });
+    // pencil lines draw themselves as the sheet opens
+    tl.fromTo('#skInner .draw', { strokeDashoffset: 2400 }, { strokeDashoffset: 0, duration: 3.4, ease: 'power1.inOut', stagger: .03, immediateRender: false }, .2);
+
+    // ── drop: the sketch becomes the real bottle, dark studio, slow orbit ──
+    show(['#sk', '#adWords', '#adBlack'], false, T.drop);
+    cutTo(T.drop, { camZ: 9.2, ry: .5, rx: .06, ps: 0 });
+    tl.to(stage, { ry: .12, camZ: 8.4, duration: T.m1 - T.drop, ease: 'power1.inOut' }, T.drop);
+    pulse(4.992, .7); pulse(5.457, .5);
+
+    // ── macros on the hits: label + liquid, pearl stopper + collar, glass base ──
+    cutTo(T.m1, { camZ: 3.5, ly: -.3, cy: -.3, cx: -.35, ry: .32, ps: 0 });
+    tl.to(stage, { cx: .3, ry: .1, duration: T.m2 - T.m1, ease: 'none' }, T.m1);
+    cutTo(T.m2, { camZ: 2.6, ly: 1.42, cy: 1.55, cx: .2, ry: -.3, rx: .05, ps: 0 });
+    tl.to(stage, { ry: .25, cx: -.15, duration: T.m3 - T.m2, ease: 'none' }, T.m2);
+    cutTo(T.m3, { camZ: 3.6, ly: -1.15, cy: -1.75, cx: .7, ry: .45, ps: 0 });
+    tl.to(stage, { cx: -.2, ry: .15, duration: T.burst - T.m3, ease: 'none' }, T.m3);
+
+    // ── the loop's drop: wide, pearls burst out of the bottle, the studio lights come up ──
+    cutTo(T.burst, { camZ: 10.6, y: .02, ry: -.2, ps: 1, spread: 1 });
+    tl.fromTo(fxState, { collapse: 1 }, { collapse: 0, duration: 1.1, ease: 'silk', immediateRender: false }, T.burst);
+    tl.to(bgU.uDepth, { value: .25, duration: .5, ease: 'power2.out' }, T.burst);
+    pulse(T.burst, 1);
+
+    // ── [slots] live MAREA site, soda macro, soda flavour switch ──
+
+    // ── MAREA: Ember → Nocturne, the spin peaks on the hit ──
+    cutTo(T.mswitch, { camZ: 8, y: .02, ps: 1, spread: .9 });
+    tl.set(bgU.uDepth, { value: .1 }, T.mswitch);
+    tl.add(buildScentTL(0, .5, .5, 2.6).paused(false), T.mswitch);
+
+    // ── wide hero: MAREA rises, then the Portside mark ghosts in over the product ──
+    cutTo(T.wide, { camZ: 11.2, y: -.06, ps: 1, spread: 1, ry: .2 });
+    show('#adTitle', true, T.wide);
+    tl.fromTo('#adTitle .ch b', { yPercent: 115 }, { yPercent: 0, duration: .7, ease: 'silk', stagger: .05, immediateRender: false }, T.wide);
+    tl.to(stage, { camZ: 10.2, duration: T.end - T.wide, ease: 'none' }, T.wide);
+    tl.to('#adBadge', { scale: 1.35, y: -40, duration: T.end - T.wide, ease: 'power2.in' }, T.wide);
+
+    // ── end card ──
+    show(['#adTitle', '#adBadge'], false, T.end);
+    endCard(T.end, T.tag, T.cta);
+    return { T, M, SLOTS };
+  }
+
+  /* ───────────────────────── ad 3 · "down the grate" (reference reel 3) ───────────────────────── */
+  function buildAd3() {
+    // reel 3 is 15.11 s; its 4-beat phrase after the reveal [p1, p2) plays twice
+    const M = { file: 'reference/reel3/reel.mp4', p1: 7.4507, p2: 10.6638, src: 15.115 };
+    const L = M.p2 - M.p1;
+    M.segs = [[0, M.p2], [M.p1, M.p2], [M.p2, M.src]];
+    const T0 = {
+      hand: 4.9,                                                      // the original footage plays untouched until the camera is in the dark
+      glint: 5.793, rise: 6.676, flash: 7.279, reveal: 7.45, whip: 8.069, site: 8.673, soda: 9.88,
+      sodaSwitch: 7.45 + L, swap: 8.069 + L, scatter: 8.673 + L, deep: 9.079 + L, notes: 9.88 + L,
+      sodaBlue: 10.681 + L, ember: 11.273 + L, wide: 12.283 + L, end: 12.945 + L, tag: 13.677 + L, cta: 14.478 + L,
+    };
+    const T = Object.fromEntries(Object.entries(T0).map(([k, v]) => [k, snap(v)]));
+    T.len = Math.round((M.src + L) * 30) / 30;
+    const SLOTS = [
+      { name: 'reel3-intro', from: 0, to: T.hand, video: M.file, srcFrom: 0 },
+      { name: 'marea-scroll', from: T.site, to: T.soda, opts: { target: '#notes', frac: .3 } },
+      { name: 'soda-hero', from: T.soda, to: T.sodaSwitch },
+      { name: 'soda-switch', from: T.sodaSwitch, to: T.scatter, opts: { clickAt: Math.round((T.swap - .45 - T.sodaSwitch) * 30) } },
+      { name: 'soda-blue', from: T.sodaBlue, to: T.ember },
+    ];
+
+    applyScentInstant(0);
+    gsap.set('#tpl', { autoAlpha: 0 });
+    gsap.set(['#descent', '#adHole', '#glowB'], { autoAlpha: 1 });
+    gsap.set(['#barT', '#barB'], { autoAlpha: 0 });
+    gsap.set(['#glowB', '#dmWord', '#descent .lbl'], { opacity: 0 });
+    $('#adUI .n').textContent = 'N°01 — Nocturne';
+    gsap.set('#adTitle .ch b', { yPercent: 115 });
+    Object.assign(stage, { x: 0, y: -.04, s: .9, ry: 0, rx: 0, camZ: 11, spread: 1, ps: 1, cx: 0, cy: 0, lx: 0, ly: 0 });
+    Object.assign(intro, { y: -7, spin: -Math.PI * 2, swarm: 1, p: 1 });
+    bgU.uDepth.value = 1; bgU.uIntro.value = 0;
+    SLOTS.forEach(s => { show('#adHole', true, s.from); show('#adHole', false, s.to); });
+
+    // ── the camera keeps falling: plankton rushes up, a depth gauge counts down to 1200 m, light grows below ──
+    const dm = { m: 0 };
+    tl.set([dust.material.uniforms.uSpeed, bokeh.material.uniforms.uSpeed], { value: 34 }, T.hand);
+    tl.to(bgU.uIntro, { value: .55, duration: T.reveal - T.hand, ease: 'power2.in' }, T.hand);
+    tl.fromTo(dm, { m: 0 }, { m: 1200, duration: T.reveal - T.hand, ease: 'power2.in', immediateRender: false,
+      onUpdate() { $('#dmN').textContent = String(Math.round(dm.m)).padStart(4, '0'); } }, T.hand);
+    tl.fromTo('#descent .lbl', { opacity: 0 }, { opacity: 1, duration: .5, immediateRender: false }, T.hand + .1);
+    tl.fromTo('#dmWord', { opacity: 0, letterSpacing: '.9em' }, { opacity: 1, letterSpacing: '.4em', duration: .8, ease: 'silk', immediateRender: false }, T.glint);
+    tl.fromTo('#glowB', { opacity: 0 }, { opacity: .9, duration: T.flash - T.rise, ease: 'power2.in', immediateRender: false }, T.rise);
+    tl.fromTo('#descent', { scale: 1 }, { scale: 1.06, duration: T.reveal - T.rise, ease: 'power2.in', immediateRender: false }, T.rise);
+    tl.fromTo('#flash', { opacity: 0 }, { opacity: .85, duration: .08, immediateRender: false }, T.flash)
+      .to('#flash', { opacity: 0, duration: .25, ease: 'power2.out' }, T.flash + .08);
+
+    // ── reveal: we land inside the site — bottle surfaces, swarm bursts, MAREA rises ──
+    show('#descent', false, T.reveal); show(['#adTitle', '#adTop', '#adNav', '#adUI'], true, T.reveal);
+    tl.set([dust.material.uniforms.uSpeed, bokeh.material.uniforms.uSpeed], { value: 1 }, T.reveal);
+    tl.set(bgU.uIntro, { value: 1 }, T.reveal);
+    tl.fromTo(bgU.uDepth, { value: .7 }, { value: 0, duration: .6, ease: 'power2.out', immediateRender: false }, T.reveal);
+    tl.fromTo(intro, { y: -3 }, { y: 0, duration: 1.2, ease: 'silk', immediateRender: false }, T.reveal)
+      .fromTo(intro, { spin: -Math.PI * 1.5 }, { spin: 0, duration: 1.4, ease: 'silk', immediateRender: false }, T.reveal)
+      .fromTo(intro, { swarm: 1 }, { swarm: 0, duration: 1.2, ease: 'silk', immediateRender: false }, T.reveal + .03)
+      .to('#adTitle .ch b', { yPercent: 0, duration: .8, ease: 'silk', stagger: .05 }, T.reveal + .03);
+    tl.fromTo(stage, { camZ: 12 }, { camZ: 10, duration: T.whip - T.reveal, ease: 'power1.out', immediateRender: false }, T.reveal);
+    pulse(T.reveal, 1);
+
+    // ── whip: a fast scent change (spin blur) like panning across a wall of cards ──
+    tl.add(buildScentTL(1, .9, .5, 2.2).paused(false), T.whip - .22);
+    show('#adTitle', false, T.whip);
+    cutTo(T.whip, { camZ: 8.2, x: .1, ry: -.4 });
+    tl.to(stage, { x: -.08, camZ: 7.6, duration: T.site - T.whip, ease: 'power1.inOut' }, T.whip);
+    tl.call(() => { $('#adUI .n').textContent = 'N°02 — Salt Vetiver'; }, null, T.whip);
+
+    // ── [slots] live MAREA site, soda hero, soda switch ──
+
+    // ── cursor sweeps the swarm ──
+    show(['#adCursor'], true, T.scatter); show('#adUI', false, T.scatter);
+    cutTo(T.scatter, { camZ: 12.2, y: .08, x: -.1, ry: 1, rx: .16 });
+    const cur = { x: 100, y: 700 };
+    const placeCursor = () => {
+      pointer.px = cur.x; pointer.py = cur.y; pointer.x = cur.x / 1080 * 2 - 1; pointer.y = -(cur.y / 1920) * 2 + 1;
+      $('#adCursor').style.transform = `translate(${cur.x}px,${cur.y}px)`;
+    };
+    tl.set(pointer, { active: true }, T.scatter);
+    tl.fromTo(cur, { x: 80, y: 760 }, { x: 1000, y: 1180, duration: T.deep - T.scatter - .02, ease: 'power2.inOut', onUpdate: placeCursor, immediateRender: false }, T.scatter);
+    tl.set(pointer, { active: false }, T.deep); show('#adCursor', false, T.deep);
+
+    // ── DEEP zoom-through ──
+    show('#adDeep', true, T.deep);
+    cutTo(T.deep, { camZ: 9.4, y: -.02, s: .9 });
+    tl.call(() => { const b = $('#adDeepText text').getExtentOfChar(2); gsap.set('#adDeepText', { svgOrigin: `${b.x + b.width*.14} ${b.y + b.height*.62}`, scale: 1 }); }, null, T.deep);
+    tl.set(['#adDeepInk', '#adDeepK'], { opacity: 1 }, T.deep);
+    tl.to('#adDeepText', { scale: 40, duration: T.notes - T.deep, ease: 'power3.in' }, T.deep)
+      .to('#adDeepK', { opacity: 0, duration: .3 }, T.deep + .2)
+      .to('#adDeepInk', { opacity: 0, duration: .3, ease: 'power1.in' }, T.notes - .3);
+
+    // ── notes ──
+    show('#adDeep', false, T.notes); show(['#adNote', '#adNav'], true, T.notes);
+    cutTo(T.notes, { camZ: 10, y: -.3, x: .12, s: .78, ry: -.6, spread: .55, ps: .7 });
+    tl.fromTo('#adNote .h b', { yPercent: 110 }, { yPercent: 0, duration: .6, ease: 'silk', stagger: .07, immediateRender: false }, T.notes)
+      .fromTo('#adNote .k', { opacity: 0 }, { opacity: 1, duration: .4, immediateRender: false }, T.notes)
+      .to(stage, { ry: .6, duration: T.sodaBlue - T.notes, ease: 'power2.inOut' }, T.notes);
+    show(['#adNote', '#adNav'], false, T.sodaBlue);
+
+    // ── [slot] blue can macro ── then Ember bursts on the hit ──
+    show('#adNav', true, T.ember);
+    cutTo(T.ember, { camZ: 8, y: .02 });
+    tl.add(buildScentTL(2, .5, .3, 2.2).paused(false), T.ember - .05);
+    tl.to(stage, { camZ: 8.8, duration: T.wide - T.ember, ease: 'none' }, T.ember);
+
+    // ── wide: MAREA rises over the burst ──
+    cutTo(T.wide, { camZ: 11.4, y: -.05, ry: .3 });
+    show('#adTitle', true, T.wide);
+    tl.fromTo('#adTitle .ch b', { yPercent: 115 }, { yPercent: 0, duration: .6, ease: 'silk', stagger: .05, immediateRender: false }, T.wide);
+    tl.fromTo(fxState, { collapse: 1 }, { collapse: 0, duration: .9, ease: 'silk', immediateRender: false }, T.wide);
+    pulse(T.wide, 1);
+
+    show(['#adTitle', '#adTop', '#adNav'], false, T.end);
+    endCard(T.end, T.tag, T.cta);
+    return { T, M, SLOTS };
+  }
+
+  const { T, M, SLOTS } = [null, buildAd1, buildAd2, buildAd3][AD_N]();
   tl.set({}, {}, T.len);
 
   let frameNo = 0;
   window.__ad = {
     duration: T.len, fps: 30, cuts: T, music: M, slots: SLOTS,
-    async ready() { await Promise.all([document.fonts.ready, envReady]); drawLabel(SCENTS[0]); render(); return true; },
+    async ready() { await Promise.all([document.fonts.ready, envReady]); drawLabel(SCENTS[scentIdx]); render(); return true; },
     // render frame i at exactly i/fps — physics step is fixed so every render is identical
     frame(i) {
       const fps = 30, t = i / fps;
