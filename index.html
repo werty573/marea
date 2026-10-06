@@ -445,8 +445,12 @@ body.ad #ad{display:block}
 <script type="module">
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-THREE.ColorManagement.enabled = false;            // every colour below is authored in display (sRGB) space
+// Linear workflow: colours are converted to linear on input, every pass works in linear light,
+// and both canvases finish with the same tone map + sRGB encode (OUT chunk), so the background
+// seen *through* the glass matches the background around it exactly.
 
 /* =================================================================== */
 /*  Setup                                                               */
@@ -511,6 +515,23 @@ float snoise(vec3 v){
   return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
 }`;
 
+// Khronos PBR Neutral tone mapping + sRGB encode — keeps brand colours faithful, rolls off highlights
+const OUT = /* glsl */`
+vec3 neutralTM(vec3 c){
+  float x = min(c.r, min(c.g, c.b));
+  float off = x < .08 ? x - 6.25*x*x : .04;
+  c -= off;
+  float peak = max(c.r, max(c.g, c.b));
+  if (peak < .76) return c;
+  float d = .24;
+  float np = 1. - d*d / (peak + d - .76);
+  c *= np / peak;
+  float g = 1. - 1. / (.15 * (peak - np) + 1.);
+  return mix(c, vec3(np), g);
+}
+vec3 toSRGB(vec3 c){ c = max(c, 0.); return mix(c*12.92, 1.055*pow(c, vec3(1./2.4)) - .055, step(.0031308, c)); }
+vec3 finish(vec3 c){ return toSRGB(neutralTM(c)); }`;
+
 // a procedural "studio" environment: soft boxes + a tinted horizon, so every glossy surface has something to reflect
 const STUDIO = /* glsl */`
 uniform vec3 uAccent; uniform vec3 uGlow; uniform vec3 uDeep;
@@ -543,16 +564,14 @@ const bgU = {
   uA0: { value: col(s0.bg[0]) }, uA1: { value: col(s0.bg[1]) }, uA2: { value: col(s0.bg[2]) }, uGA: { value: col(s0.glow) },
   uB0: { value: col(s0.bg[0]) }, uB1: { value: col(s0.bg[1]) }, uB2: { value: col(s0.bg[2]) }, uGB: { value: col(s0.glow) },
 };
-const bgMat = new THREE.ShaderMaterial({
-  uniforms: bgU, depthTest: false, depthWrite: false,
-  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
-  fragmentShader: /* glsl */`
+const BG_FRAG = /* glsl */`
   precision highp float;
   varying vec2 vUv;
   uniform float uTime, uAspect, uFlood, uRipple, uDepth, uIntro;
   uniform vec2 uFloodO, uMouse;
   uniform vec3 uA0,uA1,uA2,uGA,uB0,uB1,uB2,uGB;
   ${NOISE}
+  ${OUT}
   vec3 grad(vec3 c0, vec3 c1, vec3 c2, vec2 p){ float d = length(p*vec2(.85,1.)); return mix(mix(c0,c1,smoothstep(0.,.62,d)), c2, smoothstep(.5,1.35,d)); }
   float caustic(vec2 p, float t){
     vec2 q = p*2.6; float c = 0.;
@@ -583,6 +602,7 @@ const bgMat = new THREE.ShaderMaterial({
     vec3 glow = mix(uGA, uGB, k);
     float live = step(.001, uFlood) * step(uFlood, .999);
     c += glow * smoothstep(.12, 0., abs(fd - front)) * live * .55;
+    #ifndef CHEAP
     // caustic light near the surface, fading as you descend
     float top = smoothstep(-.35, .75, p.y);
     c += glow * caustic(pr*.85 + vec2(0., uTime*.015), uTime) * top * .28 * (1. - uDepth*.9);
@@ -593,10 +613,19 @@ const bgMat = new THREE.ShaderMaterial({
     c += glow * rays * .13 * (1. - uDepth);
     // floating haze
     c += glow * .035 * (snoise(vec3(p*1.6 + vec2(0., uTime*.03), uTime*.05))*.5+.5) * (1.-uDepth*.6);
+    #endif
     c *= mix(1., .42, uDepth);
     c *= 1. - .5*smoothstep(.45, 1.45, length(p*vec2(.75,1.)));
-    gl_FragColor = vec4(c * uIntro, 1.);
-  }`,
+    c *= uIntro;
+    #ifdef ENCODE
+      c = finish(c);
+    #endif
+    gl_FragColor = vec4(c, 1.);
+  }`;
+const bgMat = new THREE.ShaderMaterial({
+  uniforms: bgU, depthTest: false, depthWrite: false, defines: { ENCODE: '' },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
+  fragmentShader: BG_FRAG,
 });
 bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat));
 
@@ -610,6 +639,73 @@ R.setClearColor(0x000000, 0);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
 camera.position.set(0, 0, 10);
+scene.fog = new THREE.Fog(col(s0.deep), 11, 19);
+scene.environmentIntensity = 1.15;
+scene.environmentRotation.set(0, -.6, 0);
+
+// studio HDRI (Poly Haven, CC0) for physically based reflections; falls back to a procedural room on file://
+const pmrem = new THREE.PMREMGenerator(R);
+const envReady = new RGBELoader().loadAsync('assets/studio.hdr')
+  .then(hdr => { scene.environment = pmrem.fromEquirectangular(hdr).texture; hdr.dispose(); })
+  .catch(() => { scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture; });
+
+// The glass refracts what is behind it. Our background lives on a separate canvas, so a cheap copy of the
+// same shader is drawn ONLY into three's transmission pass (colorWrite is off in the visible pass).
+const transmissionOnly = mesh => { mesh.onBeforeRender = r => { mesh.material.colorWrite = r.getRenderTarget() !== rt; }; mesh.frustumCulled = false; return mesh; };
+const bgCopy = transmissionOnly(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  uniforms: bgU, depthWrite: false, defines: MOBILE ? { CHEAP: '' } : {},
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, .99999, 1.); }`,
+  fragmentShader: BG_FRAG,
+})));
+bgCopy.renderOrder = -10;
+bgCopy.layers.enable(1);
+scene.add(bgCopy);
+
+// …and the giant DOM title behind the bottle gets a twin in the transmission pass, so it refracts through the glass
+const titleCanvas = document.createElement('canvas');
+const titleTex = new THREE.CanvasTexture(titleCanvas);
+titleTex.colorSpace = THREE.SRGBColorSpace;
+const titlePlane = transmissionOnly(new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+  new THREE.MeshBasicMaterial({ map: titleTex, alphaTest: .5, depthWrite: false, fog: false })));
+titlePlane.renderOrder = -9;
+titlePlane.layers.enable(1);
+scene.add(titlePlane);
+let titleKey = '';
+function syncTitle() {
+  const el = $(AD ? '#adTitle' : '.hero-title');
+  const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+  const vis = cs.visibility !== 'hidden' && +cs.opacity > .05 && r.bottom > 0 && r.top < H;
+  titlePlane.visible = vis;
+  if (!vis) return;
+  const chars = $$(AD ? '.ch b' : '.char', el);
+  if (!chars.length) { titlePlane.visible = false; return; }
+  const boxes = chars.map(c => [c, c.getBoundingClientRect(), c.parentElement.getBoundingClientRect()]);
+  const key = boxes.map(([, b, m]) => `${b.left|0},${b.top|0},${m.top|0}`).join('|') + `|${r.width|0}x${r.height|0}`;
+  if (key !== titleKey) {
+    titleKey = key;
+    const sc = Math.min(2, 2048 / r.width);
+    titleCanvas.width = Math.ceil(r.width * sc); titleCanvas.height = Math.ceil(r.height * sc);
+    const g = titleCanvas.getContext('2d');
+    const ccs = getComputedStyle(chars[0]);
+    g.font = `${ccs.fontWeight} ${parseFloat(ccs.fontSize) * sc}px ${ccs.fontFamily}`;
+    g.fillStyle = '#ede8e1';
+    const mt = g.measureText('M'), asc = mt.fontBoundingBoxAscent, desc = mt.fontBoundingBoxDescent;
+    const lh = (parseFloat(ccs.lineHeight) || parseFloat(ccs.fontSize) * .8) * sc;
+    for (const [c, b, m] of boxes) {
+      g.save();
+      g.beginPath(); g.rect((m.left - r.left) * sc, (m.top - r.top) * sc, m.width * sc, m.height * sc); g.clip();
+      g.fillText(c.textContent, (b.left - r.left) * sc, (b.top - r.top) * sc + (lh - asc - desc) / 2 + asc);
+      g.restore();
+    }
+    titleTex.needsUpdate = true;
+  }
+  // place it on a camera-facing plane behind the bottle so it lines up with the DOM title pixel for pixel
+  const D = camera.position.z + 1.6, hh = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * D, hw = hh * camera.aspect;
+  const cx = (r.left + r.width / 2) / W * 2 - 1, cy = 1 - (r.top + r.height / 2) / H * 2;
+  titlePlane.position.set(cx * hw, cy * hh, -D).applyMatrix4(camera.matrixWorld);
+  titlePlane.quaternion.copy(camera.quaternion);
+  titlePlane.scale.set(r.width / W * 2 * hw, r.height / H * 2 * hh, 1);
+}
 
 const shared = {
   uTime: { value: 0 },
@@ -642,40 +738,19 @@ void main(){
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
-function glassMaterial(side, opacity) {
-  return new THREE.ShaderMaterial({
-    uniforms: { ...shared, uOpacity: { value: opacity } },
-    vertexShader: VS_WORLD, side, transparent: true, depthWrite: false,
-    fragmentShader: /* glsl */`
-    uniform float uTime, uOpacity;
-    varying vec3 vN, vW, vL;
-    ${STUDIO}
-    void main(){
-      vec3 N = normalize(vN); if(!gl_FrontFacing) N = -N;
-      vec3 V = normalize(cameraPosition - vW);
-      float ndv = clamp(dot(N,V), 0., 1.);
-      float fres = pow(1. - ndv, 3.);
-      vec3 refl = studio(reflect(-V, N));
-      vec3 film = .5 + .5*cos(6.2831*(vec3(0.,.33,.67) + ndv*1.3 + uTime*.03));
-      vec3 c = refl*(.3 + .95*fres) + film*fres*.3;
-      float lum = dot(refl, vec3(.3,.59,.11));
-      float a = clamp(.045 + fres*.8 + smoothstep(.85, 1.7, lum)*.65, 0., 1.) * uOpacity;
-      gl_FragColor = vec4(c, a);
-    }`,
-  });
-}
-
 const liquidU = {
   ...shared,
   uLA: { value: col(s0.la) }, uLB: { value: col(s0.lb) },
   uFill: { value: .5 }, uWob: { value: new THREE.Vector2() }, uCenter: { value: new THREE.Vector3() },
   uSurge: { value: 0 }, uScale: { value: 1 },
+  tBehind: { value: null }, uDrawRes: { value: new THREE.Vector2(1, 1) },
 };
 const liquidMat = new THREE.ShaderMaterial({
   uniforms: liquidU, vertexShader: VS_WORLD, side: THREE.DoubleSide,
   fragmentShader: /* glsl */`
   uniform float uTime, uFill, uSurge, uScale;
-  uniform vec2 uWob; uniform vec3 uCenter, uLA, uLB;
+  uniform vec2 uWob, uDrawRes; uniform vec3 uCenter, uLA, uLB;
+  uniform sampler2D tBehind;
   varying vec3 vN, vW, vL;
   ${STUDIO}
   ${NOISE}
@@ -684,114 +759,90 @@ const liquidMat = new THREE.ShaderMaterial({
     float surf = uFill + rel.x*uWob.x + rel.z*uWob.y + sin(rel.x*5. + uTime*2.3)*.012 + sin(rel.z*6. - uTime*1.7)*.01;
     if (rel.y > surf) discard;
     vec3 V = normalize(cameraPosition - vW);
+    vec2 suv = gl_FragCoord.xy / uDrawRes;
     if (!gl_FrontFacing) {                     // the inside back faces read as the liquid's top surface
-      vec3 c = mix(uLA, uGlow, .45) * .95;
-      c += uGlow * .25 * (snoise(vec3(rel.xz*4., uTime*.6))*.5+.5);
+      float rip = snoise(vec3(rel.xz*4., uTime*.6));
+      vec3 behind = texture2D(tBehind, clamp(suv + vec2(rip*.01, .02), .001, .999)).rgb;
+      vec3 c = behind * uLA * 1.8 + uLA * .3 + .08 * (rip*.5+.5);
       gl_FragColor = vec4(c, 1.); return;
     }
     vec3 N = normalize(vN);
     float ndv = clamp(dot(N,V), 0., 1.);
-    float h = clamp((rel.y + .92) / (uFill + .92), 0., 1.);
-    float sw = snoise(vec3(vL*1.7 + vec3(0., uTime*.22, uTime*.05)))*.5 + .5;
-    float sw2 = snoise(vec3(vL*5.5 - vec3(0., uTime*.5, 0.)))*.5 + .5;
-    vec3 c = mix(uLB, uLA, smoothstep(0., 1., h*.75 + sw*.4));
-    c *= .5 + .65*ndv;
-    c += uGlow * pow(1. - ndv, 2.2) * .7;
-    c += uGlow * pow(sw2, 9.) * 1.4;           // bioluminescent sparks
-    c += uGlow * smoothstep(.06, 0., abs(rel.y - surf)) * .6;  // meniscus line
-    c += uGlow * uSurge * .45;
+    float h = clamp((rel.y + .82) / (uFill + .82), 0., 1.);
+    float sw = snoise(vec3(vL*1.4 + vec3(0., uTime*.18, uTime*.04)))*.5 + .5;
+    float sw2 = snoise(vec3(vL*6.5 - vec3(0., uTime*.4, 0.)))*.5 + .5;
+    // see-through juice: what's behind the bottle, refracted by the liquid volume and filtered by its colour
+    vec3 vN2 = normalize((viewMatrix * vec4(N, 0.)).xyz);
+    vec2 ruv = suv - vN2.xy * .07 * (1.1 - ndv);
+    vec3 behind = vec3(texture2D(tBehind, clamp(ruv + vec2(.004, 0.), .001, .999)).r,
+                       texture2D(tBehind, clamp(ruv, .001, .999)).g,
+                       texture2D(tBehind, clamp(ruv - vec2(.004, 0.), .001, .999)).b);
+    vec3 tint = mix(uLB, uLA, smoothstep(0., 1., h*.8 + sw*.2));
+    vec3 c = behind * tint * 2.6 + tint * (.22 + .3*h);   // transmitted light + in-scattering, brighter toward the lit top
+    c *= .55 + .55*pow(ndv, .6);               // longer path at grazing angles absorbs more
+    c += uLA * pow(1. - ndv, 3.) * .3;         // internal reflection along the walls
+    c += uGlow * pow(sw2, 14.) * .5;           // tiny suspended shimmer
+    c += vec3(1.) * smoothstep(.04, 0., abs(rel.y - surf)) * .55;  // meniscus
+    c += uGlow * uSurge * .35;
     gl_FragColor = vec4(c, 1.);
   }`,
 });
 
-function pearlMaterial(extra = '') {
-  return new THREE.ShaderMaterial({
-    uniforms: { ...shared, uHue: { value: 0 } },
-    vertexShader: VS_WORLD,
-    fragmentShader: /* glsl */`
-    uniform float uTime, uHue;
-    varying vec3 vN, vW, vL;
-    #ifdef USE_INSTANCING_COLOR
-    varying vec3 vIC;
-    #endif
-    ${STUDIO}
-    void main(){
-      vec3 N = normalize(vN);
-      vec3 V = normalize(cameraPosition - vW);
-      float ndv = clamp(dot(N,V), 0., 1.);
-      float fres = pow(1. - ndv, 2.4);
-      float hue = uHue;
-      #ifdef USE_INSTANCING_COLOR
-        hue += vIC.r;
-      #endif
-      vec3 film = .5 + .5*cos(6.2831*(vec3(0.,.33,.67) + ndv*1.7 + hue));
-      vec3 refl = studio(reflect(-V, N));
-      float diff = .55 + .45*dot(N, normalize(vec3(.4,.85,.5)));
-      vec3 base = vec3(.96,.93,.9);
-      float sheen = pow(1. - ndv, 1.1);
-      vec3 c = base*(.3 + diff*.62) + film*.2*sheen + refl*(.14 + fres*.6) + uAccent*fres*.28;
-      c = mix(c, uDeep*.9, smoothstep(10.5, 18., length(cameraPosition - vW)) * .7);   // depth fog
-      gl_FragColor = vec4(c, 1.);
-    }`,
-  });
-}
-
-const crystalMat = new THREE.ShaderMaterial({
-  uniforms: { ...shared },
-  vertexShader: VS_WORLD,
-  fragmentShader: /* glsl */`
-  uniform float uTime;
-  varying vec3 vN, vW, vL;
-  #ifdef USE_INSTANCING_COLOR
-  varying vec3 vIC;
-  #endif
-  ${STUDIO}
-  void main(){
-    vec3 N = normalize(cross(dFdx(vW), dFdy(vW)));
-    vec3 V = normalize(cameraPosition - vW);
-    if (dot(N,V) < 0.) N = -N;
-    float ndv = clamp(dot(N,V), 0., 1.);
-    float fres = pow(1. - ndv, 2.);
-    vec3 refl = studio(reflect(-V, N));
-    vec3 tint = mix(uAccent, uGlow, .5);
-    vec3 c = tint*(.18 + .3*ndv) + refl*(.35 + fres*.8) + uGlow*fres*.5;
-    c = mix(c, uDeep*.9, smoothstep(10.5, 18., length(cameraPosition - vW)) * .7);
-    gl_FragColor = vec4(c, 1.);
-  }`,
+// thick, clear perfume glass: real refraction (transmission + thickness), dispersion, HDRI reflections
+const glassMat = new THREE.MeshPhysicalMaterial({
+  color: 0xffffff, metalness: 0, roughness: .02, transmission: 1, thickness: .9, ior: 1.52, dispersion: .6,
+  attenuationColor: new THREE.Color('#eef4ff'), attenuationDistance: 6, specularIntensity: 1, envMapIntensity: 1.35,
+  clearcoat: .4, clearcoatRoughness: .02,
+});
+const neckMat = glassMat.clone(); neckMat.thickness = .3;
+// nacre: soft sheen, thin-film iridescence, clearcoat
+const pearlMat = new THREE.MeshPhysicalMaterial({
+  color: new THREE.Color('#f1ebe4'), roughness: .3, metalness: 0, clearcoat: 1, clearcoatRoughness: .06,
+  iridescence: 1, iridescenceIOR: 1.45, iridescenceThicknessRange: [180, 420],
+  sheen: 1, sheenRoughness: .35, sheenColor: new THREE.Color('#ffd9e6'), envMapIntensity: 1.1,
+});
+const metalMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#e9dcc0'), metalness: 1, roughness: .16, envMapIntensity: 1.4 });
+// tumbled sea glass: frosted, faceted, tinted to the scent
+const crystalMat = new THREE.MeshPhysicalMaterial({
+  color: 0xffffff, metalness: 0, roughness: .36, transmission: 1, thickness: 1, ior: 1.5, flatShading: true,
+  attenuationColor: col(s0.accent), attenuationDistance: 2.2, envMapIntensity: 1.5, clearcoat: .3, clearcoatRoughness: .4,
 });
 
 // geometry — a squat rounded flacon, a short neck and a pearl stopper
 const GLASS = { w: 1.5, h: 2.0, d: .86 };
-const glassGeo = new RoundedBoxGeometry(GLASS.w, GLASS.h, GLASS.d, 6, .3);
-const liquidGeo = new RoundedBoxGeometry(GLASS.w - .16, GLASS.h - .16, GLASS.d - .16, 5, .24);
-const glassBack = new THREE.Mesh(glassGeo, glassMaterial(THREE.BackSide, .55));
+const glassGeo = new RoundedBoxGeometry(GLASS.w, GLASS.h, GLASS.d, 10, .3);
+// thick walls and a heavy base: the juice sits inside a smaller volume, raised off the bottom
+const liquidGeo = new RoundedBoxGeometry(GLASS.w - .3, GLASS.h - .46, GLASS.d - .3, 8, .2);
 const liquid = new THREE.Mesh(liquidGeo, liquidMat);
-const glassFront = new THREE.Mesh(glassGeo, glassMaterial(THREE.FrontSide, 1));
-liquid.renderOrder = 1; glassBack.renderOrder = 4; glassFront.renderOrder = 6;
-const neckGeo = new THREE.CylinderGeometry(.2, .24, .34, 40, 1, false);
-const neck = new THREE.Mesh(neckGeo, glassMaterial(THREE.DoubleSide, .9));
-neck.position.y = GLASS.h / 2 + .15; neck.renderOrder = 6;
-const collar = new THREE.Mesh(new THREE.TorusGeometry(.27, .05, 20, 64), pearlMaterial());
-collar.rotation.x = Math.PI / 2; collar.position.y = GLASS.h / 2 + .3;
-const stopperMat = pearlMaterial();
-const stopper = new THREE.Mesh(new THREE.SphereGeometry(.42, 64, 48), stopperMat);
-stopper.position.y = GLASS.h / 2 + .7;
-bottleTilt.add(liquid, glassBack, glassFront, neck, collar, stopper);
+liquid.position.y = .08;
+const glassFront = new THREE.Mesh(glassGeo, glassMat);
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(.19, .23, .34, 64, 1, false), neckMat);
+neck.position.y = GLASS.h / 2 + .15;
+const collar = new THREE.Mesh(new THREE.CylinderGeometry(.31, .31, .16, 64), metalMat);
+collar.position.y = GLASS.h / 2 + .34;
+const collarLip = new THREE.Mesh(new THREE.TorusGeometry(.31, .03, 16, 64), metalMat);
+collarLip.rotation.x = Math.PI / 2; collarLip.position.y = GLASS.h / 2 + .42;
+const stopper = new THREE.Mesh(new THREE.SphereGeometry(.42, 96, 64), pearlMat);
+stopper.position.y = GLASS.h / 2 + .8;
+bottleTilt.add(liquid, glassFront, neck, collar, collarLip, stopper);
 bottleTilt.position.y = -.35;  // optical centre of the whole object
 
 // engraved label on the front face (redrawn on every scent change)
 const labelCanvas = document.createElement('canvas');
 labelCanvas.width = 512; labelCanvas.height = 640;
 const labelTex = new THREE.CanvasTexture(labelCanvas);
-labelTex.colorSpace = THREE.NoColorSpace;
-labelTex.anisotropy = 4;
-const label = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 1.325), new THREE.MeshBasicMaterial({ map: labelTex, transparent: true, depthWrite: false }));
-label.position.z = GLASS.d / 2 + .004; label.position.y = -.06; label.renderOrder = 7;
+labelTex.colorSpace = THREE.SRGBColorSpace;
+labelTex.anisotropy = 8;
+// white silk-screen print on the glass, slightly satin
+const label = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 1.325), new THREE.MeshPhysicalMaterial({
+  map: labelTex, color: new THREE.Color('#f6f1ea'), metalness: 0, roughness: .45, transparent: true, depthWrite: false,
+  emissive: new THREE.Color('#f6f1ea'), emissiveMap: labelTex, emissiveIntensity: .35 }));
+label.position.z = GLASS.d / 2 + .003; label.position.y = -.06; label.renderOrder = 7;
 bottleTilt.add(label);
 function drawLabel(s) {
   const c = labelCanvas.getContext('2d');
   c.clearRect(0, 0, 512, 640);
-  c.fillStyle = 'rgba(245,240,233,.92)'; c.textAlign = 'center';
+  c.fillStyle = '#fff'; c.textAlign = 'center';
   c.font = '400 92px "Bodoni Moda", Didot, serif';
   c.letterSpacing = '22px';
   c.fillText('MAREA', 268, 210);
@@ -800,7 +851,7 @@ function drawLabel(s) {
   c.font = 'italic 400 54px "Bodoni Moda", serif';
   c.fillText(s.name, 256, 340);
   c.font = '500 26px "JetBrains Mono", monospace';
-  c.fillStyle = 'rgba(245,240,233,.7)';
+  c.fillStyle = 'rgba(255,255,255,.75)';
   c.letterSpacing = '6px';
   c.fillText(s.num + ' · EAU DE PARFUM', 259, 420);
   c.fillText('50 ML — 1200 M', 259, 462);
@@ -810,7 +861,7 @@ function drawLabel(s) {
 
 /* ---------- pearls + sea glass swarm ---------- */
 const N_PEARL = MOBILE ? 7 : 12, N_GLASS = MOBILE ? 6 : 10;
-const pearlMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 40, 28), pearlMaterial(), N_PEARL);
+const pearlMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 48, 32), pearlMat, N_PEARL);
 const glassMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0), crystalMat, N_GLASS);
 pearlMesh.frustumCulled = glassMesh.frustumCulled = false;
 pearlMesh.renderOrder = 2; glassMesh.renderOrder = 2;
@@ -824,7 +875,8 @@ function makeItem(kind, i) {
 for (let i = 0; i < N_PEARL; i++) items.push(makeItem(0, i));
 for (let i = 0; i < N_GLASS; i++) items.push(makeItem(1, i));
 const tmpC = new THREE.Color();
-items.forEach(it => { tmpC.setRGB(rand() * .35, 0, 0); (it.kind ? glassMesh : pearlMesh).setColorAt(it.i, tmpC); });
+// natural variation: pearls from cream to faint rose/silver, sea glass slightly lighter or darker
+items.forEach(it => { if (it.kind) tmpC.setScalar(.75 + rand()*.25); else tmpC.setHSL(.05 + rand()*.9, .12, .86 + rand()*.1); (it.kind ? glassMesh : pearlMesh).setColorAt(it.i, tmpC); });
 
 // homes live on an elliptical ring around the bottle (angle + radius), so the swarm follows it from section to section
 // and tightens/loosens with stage.spread. Near items stay out of the bottom corners where the copy sits.
@@ -907,6 +959,7 @@ const postMat = new THREE.ShaderMaterial({
   fragmentShader: /* glsl */`
   uniform sampler2D tScene; uniform float uBlur, uAb; uniform vec2 uCenter, uRes;
   varying vec2 vUv;
+  ${OUT}
   vec4 tap(vec2 uv){ return texture2D(tScene, uv); }
   void main(){
     vec2 uv = vUv;
@@ -928,9 +981,12 @@ const postMat = new THREE.ShaderMaterial({
     vec2 off = fromC * ab;
     c.r = mix(c.r, tap(uv + off).r, .85);
     c.b = mix(c.b, tap(uv - off).b, .85);
-    gl_FragColor = clamp(c, 0., 8.);
+    c = max(c, 0.);
+    gl_FragColor = vec4(finish(c.rgb), min(c.a, 1.));
   }`,
 });
+const rtBehind = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
+liquidU.tBehind.value = rtBehind.texture;
 const postScene = new THREE.Scene();
 postScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMat));
 
@@ -954,6 +1010,8 @@ function resize() {
   bgCanvas.style.height = fxCanvas.style.height = H + 'px';
   camera.aspect = W / H; camera.updateProjectionMatrix();
   rt.setSize(Math.round(W * R.getPixelRatio()), Math.round(H * R.getPixelRatio()));
+  rtBehind.setSize(Math.round(W * R.getPixelRatio() * (MOBILE ? .35 : .5)), Math.round(H * R.getPixelRatio() * (MOBILE ? .35 : .5)));
+  liquidU.uDrawRes.value.set(Math.round(W * R.getPixelRatio()), Math.round(H * R.getPixelRatio()));
   bgU.uAspect.value = W / H;
   dust.material.uniforms.uAspect.value = bokeh.material.uniforms.uAspect.value = W / H;
   postU.uRes.value.set(W, H);
@@ -1007,6 +1065,8 @@ function update(dt, t) {
   camera.position.y += (pointer.sy * .22 - camera.position.y) * (1 - Math.exp(-dt*3));
   camera.position.z = camZ;
   camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
+  syncTitle();
 
   // bottle placement (scroll stage + intro + idle float)
   const vh = viewHalf(0);
@@ -1084,11 +1144,15 @@ function update(dt, t) {
     (it.kind ? glassMesh : pearlMesh).setMatrixAt(it.i, dummy.matrix);
   }
   pearlMesh.instanceMatrix.needsUpdate = glassMesh.instanceMatrix.needsUpdate = true;
-  pearlMesh.material.uniforms.uHue.value = stopperMat.uniforms.uHue.value = fxState.hue + t*.02;
 }
 
 function render() {
   bgR.render(bgScene, bgCam);
+  // pass 0: what's behind the bottle (background + title twin) for the liquid to refract
+  camera.layers.set(1);
+  R.setRenderTarget(rtBehind); R.setClearColor(0x000000, 1); R.clear();
+  R.render(scene, camera);
+  camera.layers.set(0);
   R.setRenderTarget(rt);
   R.setClearColor(0x000000, 0); R.clear();
   R.render(scene, camera);
@@ -1138,6 +1202,8 @@ function buildScentTL(i, ox = .5, oy = .5, speed = 1) {
   tl.add(tweenColor(shared.uAccent.value, s.accent, D*.5), peak - L/2);
   tl.add(tweenColor(shared.uGlow.value, s.glow, D*.5), peak - L/2);
   tl.add(tweenColor(shared.uDeep.value, s.deep, D*.5), peak - L/2);
+  tl.add(tweenColor(crystalMat.attenuationColor, s.accent, D*.5), peak - L/2);
+  tl.add(tweenColor(scene.fog.color, s.deep, D*.5), peak - L/2);
   tl.call(() => { drawLabel(s); applyScentDOM(s); }, null, peak);
   return tl;
 }
@@ -1149,7 +1215,8 @@ function setScent(i, ox = .5, oy = .5) {
   scentIdx = i;
   if (RM) {
     bgU.uA0.value.set(s.bg[0]); bgU.uA1.value.set(s.bg[1]); bgU.uA2.value.set(s.bg[2]); bgU.uGA.value.set(s.glow);
-    [[liquidU.uLA.value, s.la], [liquidU.uLB.value, s.lb], [shared.uAccent.value, s.accent], [shared.uGlow.value, s.glow], [shared.uDeep.value, s.deep]].forEach(([c, h]) => c.set(h));
+    [[liquidU.uLA.value, s.la], [liquidU.uLB.value, s.lb], [shared.uAccent.value, s.accent], [shared.uGlow.value, s.glow], [shared.uDeep.value, s.deep],
+     [crystalMat.attenuationColor, s.accent], [scene.fog.color, s.deep]].forEach(([c, h]) => c.set(h));
     drawLabel(s); applyScentDOM(s); swapScentText(s); switching = false; return;
   }
   const tl = buildScentTL(i, ox, oy);
@@ -1169,7 +1236,7 @@ function swapScentText(s) {
     .add(() => {
       snSplit && snSplit.revert();
       nameEl.textContent = s.name; notesEl.textContent = s.notes;
-      snSplit = SplitText.create(nameEl, { type: 'chars' });
+      snSplit = SplitText.create(nameEl, { type: 'chars', charsClass: 'char' });
       gsap.from(snSplit.chars, { yPercent: 110, rotate: 6, duration: .9, ease: 'silk', stagger: .025 });
       gsap.fromTo(notesEl, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: .8, ease: 'silk', delay: .15 });
     });
@@ -1285,9 +1352,9 @@ async function initSite() {
 
   // ---- text splits (after the webfonts so line/char metrics are right) ----
   await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 2500))]);
-  const heroSplit = SplitText.create('.hero-title', { type: 'chars', mask: 'chars' });
+  const heroSplit = SplitText.create('.hero-title', { type: 'chars', mask: 'chars', charsClass: 'char' });
   const plSplit = SplitText.create('.pl-word', { type: 'chars', mask: 'chars' });
-  snSplit = SplitText.create('.sn-name', { type: 'chars' });
+  snSplit = SplitText.create('.sn-name', { type: 'chars', charsClass: 'char' });
 
   buildScroll(lenis);
   runIntro(heroSplit, plSplit, lenis);
@@ -1314,7 +1381,7 @@ function runIntro(heroSplit, plSplit, lenis) {
   gsap.set(plSplit.chars, { yPercent: 110 });
   const hole = { r: 0 };
   const counter = { v: 0 }, cEl = $('.pl-count'), bar = $('.pl-bar i');
-  const ready = Promise.all([document.fonts.ready, new Promise(r => setTimeout(r, 400))]);
+  const ready = Promise.all([document.fonts.ready, envReady, new Promise(r => setTimeout(r, 400))]);
   const tl = gsap.timeline();
   tl.to(plSplit.chars, { yPercent: 0, duration: 1.1, ease: 'silk', stagger: .07 }, .1)
     .to(counter, { v: 100, duration: 2.2, ease: 'tide', onUpdate: () => { cEl.textContent = String(Math.round(counter.v)).padStart(3, '0'); bar.style.transform = `scaleX(${counter.v/100})`; } }, .2)
@@ -1624,7 +1691,7 @@ function initAd() {
   let frameNo = 0;
   window.__ad = {
     duration: T.len, fps: 30, cuts: T, music: M,
-    async ready() { await document.fonts.ready; drawLabel(SCENTS[0]); return true; },
+    async ready() { await Promise.all([document.fonts.ready, envReady]); drawLabel(SCENTS[0]); render(); return true; },
     // render frame i at exactly i/fps — physics step is fixed so every render is identical
     frame(i) {
       const fps = 30, t = i / fps;
