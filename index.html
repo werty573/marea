@@ -264,7 +264,7 @@ body.ad #ad{display:block}
 #thumbL{z-index:3;background:#000}
 #r5{z-index:4;background:#111;overflow:hidden}
 #r5bg{position:absolute;inset:-80px;width:1240px;height:2080px;object-fit:cover;filter:blur(60px) brightness(.42) saturate(1.2)}
-.r5c{position:absolute;left:172px;top:135px;width:738px;height:1602px;border-radius:74px;overflow:hidden;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.r5c{position:absolute;left:172px;top:135px;width:738px;height:1602px;border-radius:74px;overflow:hidden;background:#000;box-shadow:0 30px 80px rgba(0,0,0,.5);filter:url(#sblur)}
 .r5c img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
 #r5card{z-index:2}#r5srch{z-index:3}#r5calc{z-index:4}#r5ig{z-index:5}
 #r5calc img{position:absolute;left:-190px;top:-135px;width:1080px;height:1920px;object-fit:fill}
@@ -2285,30 +2285,40 @@ function initAd() {
     tl.set(['#r5lbl', '#r5peek'], { opacity: 0 }, T.shrink);
     // swipe up: the Reel shrinks into its card
     tl.to('#r5ig', { ...CARD, left: X.center, duration: T.flick1 - T.shrink, ease: 'power2.out' }, T.shrink);
+    // a flick: every card glides together and decelerates like the iOS carousel, with a touch of motion blur
+    const SLIDE = .5, SEASE = 'power2.out';
+    const mblur = { b: 0 }, setBlur = () => $('#sblur feGaussianBlur').setAttribute('stdDeviation', `${mblur.b} 0`);
+    const blurAt = at => tl.fromTo(mblur, { b: 0 }, { b: 9, duration: .07, ease: 'power1.out', onUpdate: setBlur, immediateRender: false }, at)
+      .to(mblur, { b: 0, duration: .3, ease: 'power2.out', onUpdate: setBlur }, at + .07);
     // flick 1: the Reel slides right, Calculator comes to the middle, the search card peeks in on the left
-    tl.to('#r5ig', { left: X.right, duration: .34, ease: 'power3.out' }, T.flick1)
-      .to('#r5calc', { left: X.center, duration: .34, ease: 'power3.out' }, T.flick1)
-      .to('#r5srch', { left: X.left, duration: .34, ease: 'power3.out' }, T.flick1);
+    tl.to('#r5ig', { left: X.right, duration: SLIDE, ease: SEASE }, T.flick1)
+      .to('#r5calc', { left: X.center, duration: SLIDE, ease: SEASE }, T.flick1)
+      .to('#r5srch', { left: X.left, duration: SLIDE, ease: SEASE }, T.flick1);
+    blurAt(T.flick1);
     const label = (at, icon, name, peek) => {
       tl.call(() => { $('#r5lbl i').className = icon; $('#r5lbl span').textContent = name; $('#r5peek').className = peek; }, null, at);
       tl.fromTo(['#r5lbl', '#r5peek'], { opacity: 0 }, { opacity: 1, duration: .12, immediateRender: false }, at);
     };
-    label(T.flick1 + .3, 'ic-calc', 'Calculator', 'ic-safari');
+    label(T.flick1 + SLIDE - .08, 'ic-calc', 'Calculator', 'ic-safari');
     // flick 2: Calculator slides right, the search comes to the middle, MAREA peeks in
     tl.to(['#r5lbl', '#r5peek'], { opacity: 0, duration: .06 }, T.flick2);
-    tl.to('#r5ig', { left: X.off, duration: .3, ease: 'power3.out' }, T.flick2)
-      .to('#r5calc', { left: X.right, duration: .3, ease: 'power3.out' }, T.flick2)
-      .to('#r5srch', { left: X.center, duration: .3, ease: 'power3.out' }, T.flick2)
-      .to('#r5card', { left: X.left, duration: .3, ease: 'power3.out' }, T.flick2);
-    label(T.flick2 + .28, 'ic-safari', 'Safari', 'ic-marea');
+    tl.to('#r5ig', { left: X.off, duration: SLIDE, ease: SEASE }, T.flick2)
+      .to('#r5calc', { left: X.right, duration: SLIDE, ease: SEASE }, T.flick2)
+      .to('#r5srch', { left: X.center, duration: SLIDE, ease: SEASE }, T.flick2)
+      .to('#r5card', { left: X.left, duration: SLIDE, ease: SEASE }, T.flick2);
+    blurAt(T.flick2);
+    label(T.flick2 + SLIDE - .08, 'ic-safari', 'Safari', 'ic-marea');
     // switcher cards are frozen snapshots, so the search page is shown complete
     $('#r5q').textContent = 'how to get a website that actually moves';
     // slide past it: the search card is flicked away, MAREA comes to the middle
     tl.to(['#r5lbl', '#r5peek'], { opacity: 0, duration: .06 }, T.cardIn);
-    tl.to('#r5srch', { x: 330, y: -1650, scale: .94, duration: .15, ease: 'power2.in' }, T.cardIn)
-      .to('#r5calc', { left: X.off, duration: .2, ease: 'power3.out' }, T.cardIn)
-      .to('#r5card', { left: X.center, duration: .16, ease: 'power3.out' }, T.cardIn);
-    label(T.cardLabel, 'ic-marea', 'MAREA', '');
+    // swipe up: the search card is thrown off the top of the screen (well past the frame), the rest glide over
+    tl.to('#r5srch', { y: -2150, x: 60, scale: .9, duration: .32, ease: 'power2.in' }, T.cardIn)
+      .set('#r5srch', { autoAlpha: 0 }, T.cardIn + .33)
+      .to('#r5calc', { left: X.off, duration: .45, ease: SEASE }, T.cardIn + .06)
+      .to('#r5card', { left: X.center, duration: .45, ease: SEASE }, T.cardIn + .06);
+    blurAt(T.cardIn + .06);
+    label(T.cardIn + .42, 'ic-marea', 'MAREA', '');
     // tap: the card opens to full screen
     tl.to('#r5card', { left: 0, top: 0, width: 1080, height: 1920, borderRadius: 0, duration: T.opened - T.open, ease: 'power2.inOut' }, T.open);
     tl.to('#r5lbl', { opacity: 0, y: -40, duration: .12 }, T.open);
